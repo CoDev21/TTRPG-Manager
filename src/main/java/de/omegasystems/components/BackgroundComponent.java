@@ -123,6 +123,8 @@ public class BackgroundComponent extends JLabel implements HierarchyListener, Ob
 
     public double getScale() {
         return scale;
+
+        
     }
 
 }
