@@ -10,8 +10,9 @@ import javax.swing.JFrame;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import de.omegasystems.components.GameComponent;
 import de.omegasystems.components.MenubarComponent;
+import de.omegasystems.components.ScrollingComponent;
+import de.omegasystems.components.TokenRendererComponent;
 import de.omegasystems.components.dialog.ChangeValueDialog;
 import de.omegasystems.dataobjects.MenubarAttributeHolder;
 
@@ -23,6 +24,7 @@ public class App {
                 new App().CreateAndShowGUI();
             }
         });
+
     }
 
     private static App instance;
@@ -44,18 +46,17 @@ public class App {
         frame = new JFrame("TTRPG Map Manager");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        getToolbarAttributes().VIEW_GRID_OPEN_SCALE_DIALOG
-                .addObserver(abs -> new ChangeValueDialog.DoubleDialog(frame, getToolbarAttributes().VIEW_GRID_SCALE));
-        getToolbarAttributes().VIEW_GRID_OPEN_THICKNESS_DIALOG
-                .addObserver(
-                        a -> new ChangeValueDialog.DoubleDialog(frame, getToolbarAttributes().VIEW_GRID_THICKNESS));
-
-        var img = rqeuestImageFromUser();
+        var img = requestImageFromUser();
         if (img == null)
             System.exit(0);
 
-        frame.add(new GameComponent(img));
+        var gameComponent = new ScrollingComponent(img);
+        var renderer = gameComponent.getRenderer();
+        frame.add(gameComponent);
         frame.setJMenuBar(new MenubarComponent(toolbarAttributes));
+
+        new TokenRendererComponent(renderer).registerUIBindings();
+        addMenubarActions();
 
         frame.setMaximumSize(new Dimension(800, 600));
         frame.setPreferredSize(new Dimension(800, 600));
@@ -66,11 +67,28 @@ public class App {
 
     }
 
+    private void addMenubarActions() {
+        getToolbarAttributes().VIEW_GRID_OPEN_SCALE_DIALOG
+                .addObserver(abs -> new ChangeValueDialog.DoubleDialog(frame, getToolbarAttributes().VIEW_GRID_SCALE));
+
+        getToolbarAttributes().VIEW_GRID_OPEN_THICKNESS_DIALOG
+                .addObserver(
+                        a -> new ChangeValueDialog.DoubleDialog(frame, getToolbarAttributes().VIEW_GRID_THICKNESS));
+
+        getToolbarAttributes().VIEW_GRID_OPEN_OFFSET_X_DIALOG
+                .addObserver(
+                        abs -> new ChangeValueDialog.DoubleDialog(frame, getToolbarAttributes().VIEW_GRID_OFFSET_X));
+
+        getToolbarAttributes().VIEW_GRID_OPEN_OFFSET_Y_DIALOG
+                .addObserver(
+                        abs -> new ChangeValueDialog.DoubleDialog(frame, getToolbarAttributes().VIEW_GRID_OFFSET_Y));
+    }
+
     /**
      * 
      * @return An image if successfull or null otherwise
      */
-    private Image rqeuestImageFromUser() {
+    private Image requestImageFromUser() {
 
         try {
             return ImageIO.read(new File(System.getProperty("user.dir") + "/ressources/img/Tavern_Battlemap.jpg"));

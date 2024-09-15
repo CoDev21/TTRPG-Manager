@@ -7,28 +7,36 @@ import java.awt.event.MouseWheelListener;
 
 import javax.swing.JScrollPane;
 
-import de.omegasystems.core.Background;
-import de.omegasystems.core.GameCore;
+import de.omegasystems.core.BackgroundHolder;
+import de.omegasystems.core.Renderer;
 import de.omegasystems.utility.Observer;
 import de.omegasystems.utility.Observerhandler;
 
-public class GameComponent extends JScrollPane implements GameCore {
+public class ScrollingComponent extends JScrollPane implements BackgroundHolder {
 
     // Negative because intuitive zooming is inverted to normal scrolling
     private final double ZOOM_FACTOR = 0.05;
     private final int SCROLL_INCREMENT = 10;
-    private Background backgroundComponent;
+    private Renderer backgroundComponent;
 
-    private Observerhandler<GameCore> observerhandler = new Observerhandler<>();
+    private Observerhandler<BackgroundHolder> observerhandler = new Observerhandler<>();
     // For values < 0 this zooms in, for > 0 it sooms out. See getScale()
     private int scale = 0;
     private double preScale = 1.0;
 
-    public GameComponent(Image image) {
-        super(new BackgroundComponent(image, true));
+    public ScrollingComponent(Image image) {
+        super();
+
+        var renderer = new BackgroundComponent(image);
+        addObserver(renderer);
+        getViewport().setView(renderer);
+        setRenderer(renderer);
 
         getVerticalScrollBar().setUnitIncrement(SCROLL_INCREMENT);
         getHorizontalScrollBar().setUnitIncrement(SCROLL_INCREMENT);
+
+        setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+        setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
         // Remove the original scroll listener so that our custom listener can prevent
         // scrolling if ctrl is pressed (for zoom). It is not possible otherwise.
@@ -38,7 +46,7 @@ public class GameComponent extends JScrollPane implements GameCore {
             public void mouseWheelMoved(final MouseWheelEvent e) {
                 if (e.isControlDown()) {
                     updateScale(e.getWheelRotation());
-                    
+
                 } else if (e.isShiftDown()) {
                     // Horizontal scrolling
                     Adjustable adj = getHorizontalScrollBar();
@@ -60,14 +68,17 @@ public class GameComponent extends JScrollPane implements GameCore {
         throw new IllegalArgumentException("NOT IMPLEMENTED");
     }
 
-    @Override
-    public void setBackgroundComponent(Background newBackground) {
+    private void setRenderer(Renderer newBackground) {
         if (backgroundComponent != null)
             return;
         this.backgroundComponent = newBackground;
         setPrescale(1.0f);
     }
 
+    @Override
+    public Renderer getRenderer() {
+        return this.backgroundComponent;
+    }
 
     /**
      * This method tries to fit the calculated double to the somewhot complicated
@@ -84,7 +95,7 @@ public class GameComponent extends JScrollPane implements GameCore {
     }
 
     private void updateScale(int scrollVal) {
-        
+
         this.scale += scrollVal;
         notifyObservers(this);
     }
@@ -100,17 +111,17 @@ public class GameComponent extends JScrollPane implements GameCore {
     }
 
     @Override
-    public void addObserver(Observer<GameCore> obs) {
+    public void addObserver(Observer<BackgroundHolder> obs) {
         observerhandler.addObserver(obs);
     }
 
     @Override
-    public void removeObserver(Observer<GameCore> obs) {
+    public void removeObserver(Observer<BackgroundHolder> obs) {
         observerhandler.removeObserver(obs);
     }
 
     @Override
-    public void notifyObservers(GameCore value) {
+    public void notifyObservers(BackgroundHolder value) {
         observerhandler.notifyObservers(value);
 
     }
