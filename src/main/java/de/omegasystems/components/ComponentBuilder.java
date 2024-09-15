@@ -205,6 +205,7 @@ public abstract class ComponentBuilder {
     public static class ImagePathSelector extends JLabel {
 
         private Property<File> path;
+        private static File lastPath = new File(System.getProperty("user.dir"));
 
         public ImagePathSelector(JFrame parent, Property<File> currentPath, Image defaultImage) {
             super(new ImageIcon(loadFileOrPlaceholderImage(currentPath.getValue(), defaultImage)));
@@ -267,17 +268,21 @@ public abstract class ComponentBuilder {
             fileChooser
                     .setCurrentDirectory((path.getValue() != null && path.getValue().exists())
                             ? path.getValue()
-                            : new File(System.getProperty("user.dir")));
+                            : lastPath);
+
             fileChooser.setDialogTitle("Choose a map");
             fileChooser.setFileFilter(new FileNameExtensionFilter(
                     "Image files", ImageIO.getReaderFileSuffixes()));
             int result = fileChooser.showOpenDialog(parent);
             if (result == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fileChooser.getSelectedFile();
-                try {
-                    ImageIO.read(selectedFile);
-                    return selectedFile;
-                } catch (Exception e) {
+                if (selectedFile != null && selectedFile.exists()) {
+                    lastPath = selectedFile;
+                    try {
+                        ImageIO.read(selectedFile);
+                        return selectedFile;
+                    } catch (Exception e) {
+                    }
                 }
             }
 

@@ -23,7 +23,7 @@ public class TokenData implements Observable<TokenData> {
         pictureFile = new Property<File>(this, null);
         name = new Property<String>(this, "Name...");
         description = new Property<String>(this, "Your Description");
-        size = new Property<TokenSize>(this, TokenSize.Large);
+        size = new Property<TokenSize>(this, TokenSize.Medium);
         initiative = new Property<Integer>(this, 0);
         movement = new Property<String>(this, "Movement");
         friendStatus = new Property<Friendlieness>(this, Friendlieness.Neutral);
