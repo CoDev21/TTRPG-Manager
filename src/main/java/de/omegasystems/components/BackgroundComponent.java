@@ -33,6 +33,7 @@ public class BackgroundComponent extends JLabel implements Observer<BackgroundHo
     public BackgroundComponent(Image image) {
         super(new ImageIcon(image));
         this.image = image;
+        setFocusable(true);
 
         var GRID_ENABLED = App.getInstance().getToolbarAttributes().VIEW_GRID_ENABLED;
         GRID_ENABLED.addObserver(val -> {

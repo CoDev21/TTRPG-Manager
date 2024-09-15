@@ -6,6 +6,8 @@ import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
@@ -21,7 +23,7 @@ import de.omegasystems.core.Renderer.DrawingComponent;
 import de.omegasystems.core.Token;
 import de.omegasystems.core.TokenHandler;
 
-public class TokenRendererComponent extends MouseAdapter implements DrawingComponent, TokenHandler {
+public class TokenRendererComponent extends MouseAdapter implements DrawingComponent, TokenHandler, KeyListener {
 
     private List<Token> tokens = new ArrayList<>();
     private Color highlightedColor = Color.RED;
@@ -39,6 +41,7 @@ public class TokenRendererComponent extends MouseAdapter implements DrawingCompo
         renderer.addRenderCallback(this);
         renderer.addMouseListener(this);
         renderer.addMouseMotionListener(this);
+        renderer.addKeyListener(this);
     }
 
     public void registerUIBindings() {
@@ -107,6 +110,28 @@ public class TokenRendererComponent extends MouseAdapter implements DrawingCompo
     }
 
     @Override
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() != KeyEvent.VK_DELETE) {
+            return;
+        }
+
+        if (highlightedToken != null) {
+            removeToken(highlightedToken);
+            highlightedToken = null;
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+
+    }
+
+    @Override
     public void mouseDragged(MouseEvent e) {
         if (draggedToken == null)
             return;
@@ -141,7 +166,7 @@ public class TokenRendererComponent extends MouseAdapter implements DrawingCompo
                 draggedToken = token;
                 highlightedToken = token;
                 dragOffset = new Point(posX - e.getX(), posY - e.getY());
-                renderer.scheduleRedraw();
+                notifyChange();
                 found = true;
                 break;
             }
@@ -150,7 +175,7 @@ public class TokenRendererComponent extends MouseAdapter implements DrawingCompo
 
         if (!found) {
             highlightedToken = null;
-            renderer.scheduleRedraw();
+            notifyChange();
         }
     }
 
@@ -174,7 +199,13 @@ public class TokenRendererComponent extends MouseAdapter implements DrawingCompo
 
     @Override
     public void removeToken(Token t) {
+        if (t == null)
+            return;
         tokens.remove(t);
+        if (t.equals(highlightedToken))
+            highlightedToken = null;
+        if (t.equals(draggedToken))
+            draggedToken = null;
         notifyChange();
     }
 
