@@ -90,10 +90,10 @@ public class App {
      */
     private Image requestImageFromUser() {
 
-        try {
-            return ImageIO.read(new File(System.getProperty("user.dir") + "/ressources/img/Tavern_Battlemap.jpg"));
-        } catch (Exception e) {
-        }
+        // try {
+        //     return ImageIO.read(new File(System.getProperty("user.dir") + "/ressources/img/Tavern_Battlemap.jpg"));
+        // } catch (Exception e) {
+        // }
 
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
