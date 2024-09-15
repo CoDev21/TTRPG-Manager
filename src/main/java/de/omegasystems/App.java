@@ -1,6 +1,9 @@
 package de.omegasystems;
 
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.io.File;
 
@@ -19,6 +22,7 @@ import de.omegasystems.dataobjects.MenubarAttributeHolder;
 public class App {
 
     public static void main(String[] args) {
+
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 new App().CreateAndShowGUI();
@@ -44,6 +48,7 @@ public class App {
         }
 
         frame = new JFrame("TTRPG Map Manager");
+        frame.setBackground(Color.WHITE);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         var img = requestImageFromUser();
@@ -90,10 +95,11 @@ public class App {
      */
     private Image requestImageFromUser() {
 
-        // try {
-        //     return ImageIO.read(new File(System.getProperty("user.dir") + "/ressources/img/Tavern_Battlemap.jpg"));
-        // } catch (Exception e) {
-        // }
+        try {
+        return ImageIO.read(new File(System.getProperty("user.dir") +
+        "/ressources/img/Tavern_Battlemap.jpg"));
+        } catch (Exception e) {
+        }
 
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));

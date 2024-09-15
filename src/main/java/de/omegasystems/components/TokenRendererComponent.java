@@ -3,6 +3,7 @@ package de.omegasystems.components;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -11,6 +12,7 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -89,6 +91,18 @@ public class TokenRendererComponent extends MouseAdapter implements DrawingCompo
 
             int scaledImageSize = calculateImageSize(token);
             g.drawImage(token.getImage(), posX, posY, scaledImageSize, scaledImageSize, null);
+
+            // Draw the Tokens' name
+
+            g.setFont(new Font(g.getFont().getName(), g.getFont().getStyle(), 20));
+            Font f = g.getFont();
+            Rectangle2D charBounds = f.getStringBounds(token.getName(), g.getFontRenderContext());
+
+            int stringPosX = (int) ((posX + scaledImageSize / 2.0) - (charBounds.getWidth() / 2.0));
+            var stringPosY = posY + scaledImageSize + 2;
+
+            g.setColor(Color.BLACK);
+            g.drawString(token.getName(), stringPosX, stringPosY);
 
             // Draw the outline around a highlighted token
             if (!token.equals(highlightedToken))

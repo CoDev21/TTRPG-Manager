@@ -1,6 +1,10 @@
 package de.omegasystems.components.dialog;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.Label;
 
@@ -80,6 +84,10 @@ public class TokenDialog extends JDialog {
             dispose();
         });
 
+        sendButton.setBackground(Color.GREEN);
+        sendButton.setForeground(Color.RED);
+        sendButton.setOpaque(false);
+
         // sizeChooser.setHorizontalAlignment(JLabel.LEFT);
         // friendlienessChooser.forEach(btn -> btn.setAlignmentX(LEFT_ALIGNMENT));
 
@@ -123,10 +131,21 @@ public class TokenDialog extends JDialog {
         // getContentPane().add(south, "South");
         // pack();
 
+        changeFont(this, new Font("Georgia", Font.BOLD, sendButton.getFont().getSize()));
+
         pack();
         setResizable(false);
         setVisible(true);
         setLocationRelativeTo(null);
+    }
+
+    public static void changeFont(Component component, Font font) {
+        component.setFont(font);
+        if (component instanceof Container) {
+            for (Component child : ((Container) component).getComponents()) {
+                changeFont(child, font);
+            }
+        }
     }
 
 }
