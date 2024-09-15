@@ -142,10 +142,9 @@ public class TokenRendererComponent extends MouseAdapter implements DrawingCompo
         var maxPos = renderer.getWorldSize();
         var scale = renderer.getScale();
 
-        // Check that the item would land inside the playable area
-        if (translatedOffset.x < 0 || translatedOffset.y < 0 || translatedOffset.x + tokenSize > maxPos.getWidth()
-                || translatedOffset.y + tokenSize > maxPos.getHeight())
-            return;
+        // Clamp the pos so that plaer cannot be dragge doutside the visible playarea
+        translatedOffset.x = Math.clamp(translatedOffset.x, 0, (int) (maxPos.getWidth() - tokenSize));
+        translatedOffset.y = Math.clamp(translatedOffset.y, 0, (int) (maxPos.getHeight() - tokenSize));
 
         draggedToken.setPosition(new Point2D.Double(translatedOffset.x / scale, translatedOffset.y / scale));
     }
