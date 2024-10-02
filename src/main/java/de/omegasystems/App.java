@@ -28,13 +28,22 @@ public class App {
                 isDev = true;
         }
         final boolean resultIsDev = isDev;
+        boolean isDev = false;
+        for (String string : args) {
+            if ("--dev".equals(string))
+                isDev = true;
+        }
+        final boolean resultIsDev = isDev;
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
+                new App(resultIsDev).CreateAndShowGUI();
                 new App(resultIsDev).CreateAndShowGUI();
             }
         });
 
     }
+
+    private boolean isDevEnv;
 
     private boolean isDevEnv;
 
@@ -44,7 +53,9 @@ public class App {
     private MenubarAttributeHolder toolbarAttributes = new MenubarAttributeHolder();
 
     public App(boolean isDevEnv) {
+    public App(boolean isDevEnv) {
         instance = this;
+        this.isDevEnv = isDevEnv;
         this.isDevEnv = isDevEnv;
     }
 
