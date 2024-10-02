@@ -22,22 +22,30 @@ import de.omegasystems.dataobjects.MenubarAttributeHolder;
 public class App {
 
     public static void main(String[] args) {
-
+        boolean isDev = false;
+        for (String string : args) {
+            if ("--dev".equals(string))
+                isDev = true;
+        }
+        final boolean resultIsDev = isDev;
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                new App().CreateAndShowGUI();
+                new App(resultIsDev).CreateAndShowGUI();
             }
         });
 
     }
+
+    private boolean isDevEnv;
 
     private static App instance;
 
     private JFrame frame;
     private MenubarAttributeHolder toolbarAttributes = new MenubarAttributeHolder();
 
-    public App() {
+    public App(boolean isDevEnv) {
         instance = this;
+        this.isDevEnv = isDevEnv;
     }
 
     private void CreateAndShowGUI() {
@@ -94,12 +102,11 @@ public class App {
      * @return An image if successfull or null otherwise
      */
     private Image requestImageFromUser() {
-
-        try {
-        return ImageIO.read(new File(System.getProperty("user.dir") +
-        "/ressources/img/Tavern_Battlemap.jpg"));
-        } catch (Exception e) {
-        }
+        if (isDevEnv)
+            try {
+                return ImageIO.read(new File(System.getProperty("user.dir") + "/ressources/img/Tavern_Battlemap.jpg"));
+            } catch (Exception e) {
+            }
 
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
