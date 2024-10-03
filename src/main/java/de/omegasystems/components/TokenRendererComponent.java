@@ -17,18 +17,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.omegasystems.App;
-import de.omegasystems.components.dialog.ChangeValueDialog;
 import de.omegasystems.components.dialog.ChangeValueDialog.DoubleDialog;
 import de.omegasystems.components.dialog.TokenDialog;
 import de.omegasystems.core.Renderer;
 import de.omegasystems.core.Renderer.DrawingComponent;
 import de.omegasystems.core.Token;
 import de.omegasystems.core.TokenHandler;
+import de.omegasystems.utility.Observer;
+import de.omegasystems.utility.Observerhandler;
 
 public class TokenRendererComponent extends MouseAdapter implements DrawingComponent, TokenHandler, KeyListener {
 
+    private Observerhandler<TokenHandler> observerhandler = new Observerhandler<>();
+
     private List<Token> tokens = new ArrayList<>();
-    private Color highlightedColor = Color.RED;
     private double highlightThickness = 1.0;
     private double tokenScale = 64.0;
 
@@ -50,10 +52,6 @@ public class TokenRendererComponent extends MouseAdapter implements DrawingCompo
         var toolbarAttributes = App.getInstance().getToolbarAttributes();
 
         // Create the value bindings
-        toolbarAttributes.TOKEN_OUTLINE_COLOR.addObserver(newVal -> {
-            this.highlightedColor = newVal;
-            notifyChange();
-        });
         toolbarAttributes.TOKEN_OUTLINE_THICKNESS.addObserver(newVal -> {
             this.highlightThickness = newVal;
             notifyChange();
@@ -63,7 +61,6 @@ public class TokenRendererComponent extends MouseAdapter implements DrawingCompo
             notifyChange();
         });
 
-        this.highlightedColor = toolbarAttributes.TOKEN_OUTLINE_COLOR.getValue();
         this.highlightThickness = toolbarAttributes.TOKEN_OUTLINE_THICKNESS.getValue();
         this.tokenScale = toolbarAttributes.TOKEN_SIZE.getValue();
 
@@ -76,50 +73,119 @@ public class TokenRendererComponent extends MouseAdapter implements DrawingCompo
                 abs -> new DoubleDialog(renderer.getFrame(),
                         toolbarAttributes.TOKEN_SIZE));
 
-        toolbarAttributes.TOKEN_OPEN_OUTLINE_COLOR_DIALOG.addObserver(
-                abs -> ChangeValueDialog.createColorDialog(renderer.getFrame(), toolbarAttributes.TOKEN_OUTLINE_COLOR));
         toolbarAttributes.TOKEN_OPEN_OUTLINE_THICKNESS_DIALOG.addObserver(
                 abs -> new DoubleDialog(renderer.getFrame(), toolbarAttributes.TOKEN_OUTLINE_THICKNESS));
     }
 
     @Override
-    public void draw(Graphics2D g, Dimension size, double scale) {
+    public void draw(Graphics2D g, Dimension drawingDimensions, double scale) {
+
         for (Token token : tokens) {
 
             int posX = (int) (token.getPosition().x * scale);
             int posY = (int) (token.getPosition().y * scale);
 
-            int scaledImageSize = calculateImageSize(token);
+            int scaledImageSize = calculateImageSizeFor(token);
             g.drawImage(token.getImage(), posX, posY, scaledImageSize, scaledImageSize, null);
+
+            g.setStroke(new BasicStroke((float) (highlightThickness * scale)));
+            g.setColor(token.equals(highlightedToken) ? token.getFriendStatus().getHighlight()
+                    : token.getFriendStatus().getOutline());
+
+            int outlineOffset = (int) (highlightThickness * scale / 2);
+
+            g.drawRect(posX - outlineOffset, posY - outlineOffset, scaledImageSize + outlineOffset * 2,
+                    scaledImageSize + outlineOffset * 2);
 
             // Draw the Tokens' name
 
-            g.setFont(new Font(g.getFont().getName(), g.getFont().getStyle(), 20));
+            g.setFont(new Font("Georgia", Font.BOLD, 20));
             Font f = g.getFont();
             Rectangle2D charBounds = f.getStringBounds(token.getName(), g.getFontRenderContext());
 
             int stringPosX = (int) ((posX + scaledImageSize / 2.0) - (charBounds.getWidth() / 2.0));
-            var stringPosY = posY + scaledImageSize + 2;
+            int stringPosY = (int) (posY + scaledImageSize + (charBounds.getHeight() / 2.0));
 
             g.setColor(Color.BLACK);
             g.drawString(token.getName(), stringPosX, stringPosY);
 
-            // Draw the outline around a highlighted token
-            if (!token.equals(highlightedToken))
-                continue;
-
-            g.setStroke(new BasicStroke((float) (highlightThickness * scale)));
-            g.setColor(highlightedColor);
-
-            int highlightOffset = (int) (highlightThickness * scale / 2);
-
-            g.drawRect(posX - highlightOffset, posY - highlightOffset, scaledImageSize + highlightOffset * 2,
-                    scaledImageSize + highlightOffset * 2);
-
         }
+
     }
 
-    private int calculateImageSize(Token token) {
+    @Override
+    public void mouseDragged(MouseEvent e) {
+        if (draggedToken == null)
+            return;
+
+        var translatedOffset = e.getPoint();
+        translatedOffset.translate(dragOffset.x, dragOffset.y);
+        var tokenSize = calculateImageSizeFor(draggedToken);
+        var maxPos = renderer.getWorldSize();
+        var scale = renderer.getScale();
+
+        // Clamp the pos so that plaer cannot be dragge doutside the visible playarea
+        translatedOffset.x = Math.clamp(translatedOffset.x, 0, (int) (maxPos.getWidth() - tokenSize));
+        translatedOffset.y = Math.clamp(translatedOffset.y, 0, (int) (maxPos.getHeight() - tokenSize));
+
+        draggedToken.setPosition(new Point2D.Double(translatedOffset.x / scale, translatedOffset.y / scale));
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        if (e.getClickCount() == 2 && highlightedToken != null)
+            new TokenDialog(renderer.getFrame(), highlightedToken);
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+        Token token = getTokenFromPosition(e);
+        if (token == null) {
+            highlightedToken = null;
+            notifyChange();
+            return;
+        }
+
+        var tokenPos = token.getPosition();
+        double scale = renderer.getScale();
+        int posX = (int) (tokenPos.x * scale);
+        int posY = (int) (tokenPos.y * scale);
+
+        draggedToken = token;
+        highlightedToken = token;
+        dragOffset = new Point(posX - e.getX(), posY - e.getY());
+
+        // Re-add the token to the list at the back so that it gets drawn last (above
+        // all the other Tokens)
+        tokens.remove(token);
+        tokens.add(token);
+        notifyChange();
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        draggedToken = null;
+    }
+
+    @Override
+    public Token getTokenFromPosition(MouseEvent e) {
+        // Reversed the list to make it consistent with clicking the drawn hierachy
+        // (last elements get drawn on top of others)
+        for (Token token : tokens.reversed()) {
+            var tokenPos = token.getPosition();
+            double scale = renderer.getScale();
+            int tokenSize = calculateImageSizeFor(token);
+            int posX = (int) (tokenPos.x * scale);
+            int posY = (int) (tokenPos.y * scale);
+
+            if (new Rectangle(posX, posY, tokenSize, tokenSize)
+                    .contains(e.getPoint()))
+                return token;
+        }
+        return null;
+    }
+
+    public int calculateImageSizeFor(Token token) {
         return (int) (renderer.getScale() * tokenScale * token.getSize().getScale());
     }
 
@@ -146,58 +212,6 @@ public class TokenRendererComponent extends MouseAdapter implements DrawingCompo
     }
 
     @Override
-    public void mouseDragged(MouseEvent e) {
-        if (draggedToken == null)
-            return;
-
-        var translatedOffset = e.getPoint();
-        translatedOffset.translate(dragOffset.x, dragOffset.y);
-        var tokenSize = calculateImageSize(draggedToken);
-        var maxPos = renderer.getWorldSize();
-        var scale = renderer.getScale();
-
-        // Clamp the pos so that plaer cannot be dragge doutside the visible playarea
-        translatedOffset.x = Math.clamp(translatedOffset.x, 0, (int) (maxPos.getWidth() - tokenSize));
-        translatedOffset.y = Math.clamp(translatedOffset.y, 0, (int) (maxPos.getHeight() - tokenSize));
-
-        draggedToken.setPosition(new Point2D.Double(translatedOffset.x / scale, translatedOffset.y / scale));
-    }
-
-    @Override
-    public void mousePressed(MouseEvent e) {
-
-        boolean found = false;
-        for (Token token : tokens) {
-            var tokenPos = token.getPosition();
-            double scale = renderer.getScale();
-            int tokenSize = calculateImageSize(token);
-            int posX = (int) (tokenPos.x * scale);
-            int posY = (int) (tokenPos.y * scale);
-
-            if (new Rectangle(posX, posY, tokenSize, tokenSize)
-                    .contains(e.getPoint())) {
-                draggedToken = token;
-                highlightedToken = token;
-                dragOffset = new Point(posX - e.getX(), posY - e.getY());
-                notifyChange();
-                found = true;
-                break;
-            }
-
-        }
-
-        if (!found) {
-            highlightedToken = null;
-            notifyChange();
-        }
-    }
-
-    @Override
-    public void mouseReleased(MouseEvent e) {
-        draggedToken = null;
-    }
-
-    @Override
     public void addToken(Token t) {
         if (t == null | tokens.contains(t))
             return;
@@ -214,16 +228,40 @@ public class TokenRendererComponent extends MouseAdapter implements DrawingCompo
     public void removeToken(Token t) {
         if (t == null)
             return;
-        tokens.remove(t);
+        if (!tokens.remove(t))
+            return;
         if (t.equals(highlightedToken))
             highlightedToken = null;
         if (t.equals(draggedToken))
             draggedToken = null;
+        if (t.equals(highlightedToken))
+            highlightedToken = null;
         notifyChange();
+    }
+
+    @Override
+    public boolean hasToken(Token t) {
+        return tokens.contains(t);
     }
 
     @Override
     public void notifyChange() {
         renderer.scheduleRedraw();
+        notifyObservers(this);
+    }
+
+    @Override
+    public void addObserver(Observer<TokenHandler> obs) {
+        observerhandler.addObserver(obs);
+    }
+
+    @Override
+    public void notifyObservers(TokenHandler value) {
+        observerhandler.notifyObservers(this);
+    }
+
+    @Override
+    public void removeObserver(Observer<TokenHandler> obs) {
+        observerhandler.removeObserver(obs);
     }
 }

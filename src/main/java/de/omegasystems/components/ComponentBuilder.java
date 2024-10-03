@@ -16,13 +16,13 @@ import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSlider;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -169,9 +169,9 @@ public abstract class ComponentBuilder {
         return item;
     }
 
-    public static JEditorPane createEditorPane(AbstractAttributeHolder.Property<String> coupledValue) {
+    public static JTextArea createEditorPane(AbstractAttributeHolder.Property<String> coupledValue) {
 
-        JEditorPane item = new JEditorPane("text/html", coupledValue.getValue());
+        JTextArea item = new JTextArea(coupledValue.getValue());
         item.setEditable(true);
         // item.setPreferredSize(new Dimension(width, height));
 

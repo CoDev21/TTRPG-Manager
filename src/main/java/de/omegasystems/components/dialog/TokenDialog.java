@@ -75,6 +75,7 @@ public class TokenDialog extends JDialog {
 
         var friendlienessChooser = ComponentBuilder.createEnumRadioButtons(data.getFriendStatus(), Friendlieness.class);
         var sizeChooser = ComponentBuilder.createEnumSlider("Size: ", data.getSize(), TokenSize.class);
+        var movementEditor = ComponentBuilder.createTextField(12, data.getMovement());
 
         var sendButton = ComponentBuilder.createCallbackButton(token != null ? "Save Changes" : "Create Token", () -> {
             if (token != null)
@@ -98,6 +99,8 @@ public class TokenDialog extends JDialog {
         topRightPanel.add(sizeChooser);
         topRightPanel.add(new Label("Friendlieness:", Label.LEFT));
         friendlienessChooser.forEach(btn -> topRightPanel.add(btn));
+        topRightPanel.add(Box.createVerticalStrut(20));
+        topRightPanel.add(movementEditor);
 
         topPanel.add(topLeftPanel);
         topPanel.add(topRightPanel);

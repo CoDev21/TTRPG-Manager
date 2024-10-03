@@ -42,8 +42,8 @@ public class Token {
 
     public Token(TokenData tokenData, TokenHandler tokenHandler) {
         this.id = UUID.randomUUID();
-        updateAllValues(tokenData);
         this.tokenHandler = tokenHandler;
+        updateAllValues(tokenData);
     }
 
     public void updateAllValues(TokenData tokenData) {
@@ -53,7 +53,9 @@ public class Token {
         this.size = tokenData.getSize().getValue();
         this.initiative = tokenData.getInitiative().getValue();
         this.movement = tokenData.getMovement().getValue();
+        this.friendStatus = tokenData.getFriendStatus().getValue();
         loadImage();
+        tokenHandler.notifyChange();
     }
 
     private void loadImage() {
@@ -79,6 +81,7 @@ public class Token {
         data.getSize().setValue(size);
         data.getInitiative().setValue(initiative);
         data.getMovement().setValue(movement);
+        data.getFriendStatus().setValue(friendStatus);
         return data;
     }
 

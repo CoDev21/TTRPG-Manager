@@ -2,8 +2,6 @@ package de.omegasystems;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.io.File;
 
@@ -16,7 +14,9 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import de.omegasystems.components.MenubarComponent;
 import de.omegasystems.components.ScrollingComponent;
 import de.omegasystems.components.TokenRendererComponent;
+import de.omegasystems.components.TokenTooltipComponent;
 import de.omegasystems.components.dialog.ChangeValueDialog;
+import de.omegasystems.core.Renderer;
 import de.omegasystems.dataobjects.MenubarAttributeHolder;
 
 public class App {
@@ -30,7 +30,6 @@ public class App {
         final boolean resultIsDev = isDev;
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                new App(resultIsDev).CreateAndShowGUI();
                 new App(resultIsDev).CreateAndShowGUI();
             }
         });
@@ -46,7 +45,6 @@ public class App {
 
     public App(boolean isDevEnv) {
         instance = this;
-        this.isDevEnv = isDevEnv;
         this.isDevEnv = isDevEnv;
     }
 
@@ -70,7 +68,8 @@ public class App {
         frame.add(gameComponent);
         frame.setJMenuBar(new MenubarComponent(toolbarAttributes));
 
-        new TokenRendererComponent(renderer).registerUIBindings();
+        registerRendererComponents(renderer);
+
         addMenubarActions();
 
         frame.setMaximumSize(new Dimension(800, 600));
@@ -80,6 +79,13 @@ public class App {
 
         frame.setVisible(true); // Show the window
 
+    }
+
+    private void registerRendererComponents(Renderer renderer) {
+        TokenRendererComponent tokenHandler = new TokenRendererComponent(renderer);
+        tokenHandler.registerUIBindings();
+
+       new TokenTooltipComponent(renderer, tokenHandler);
     }
 
     private void addMenubarActions() {

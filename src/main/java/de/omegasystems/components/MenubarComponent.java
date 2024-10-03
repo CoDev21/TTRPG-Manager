@@ -27,7 +27,6 @@ public class MenubarComponent extends JMenuBar {
         TOKEN.addSeparator();
         TOKEN.add(createTextActionTrigger("Change Token Size", null, dataHolder.TOKEN_OPEN_SIZE_DIALOG));
         TOKEN.addSeparator();
-        TOKEN.add(createTextActionTrigger("Change Outline Color", null, dataHolder.TOKEN_OPEN_OUTLINE_COLOR_DIALOG));
         TOKEN.add(createTextActionTrigger("Change Outline Thickness", null,
                 dataHolder.TOKEN_OPEN_OUTLINE_THICKNESS_DIALOG));
 
