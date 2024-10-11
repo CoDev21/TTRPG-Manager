@@ -6,7 +6,9 @@ import java.io.File;
 import java.util.UUID;
 
 import javax.imageio.ImageIO;
+import javax.swing.JOptionPane;
 
+import de.omegasystems.App;
 import de.omegasystems.dataobjects.Friendlieness;
 import de.omegasystems.dataobjects.TokenData;
 import de.omegasystems.dataobjects.TokenSize;
@@ -16,8 +18,9 @@ public class Token {
     private static final Image placeholderImage;
     static {
         try {
-            placeholderImage = ImageIO.read(new File(System.getProperty("user.dir") + "\\ressources\\img\\Liron.jpg"));
+            placeholderImage = ImageIO.read(App.getInstance().loadResourceFile("img/Liron.jpg"));
         } catch (Exception e) {
+            App.getInstance().openErrorDialog("Couldn't load the placeholder image for Tokens!");
             throw new IllegalStateException("Couldn't load Backup Token Image", e);
         }
     }
@@ -70,6 +73,7 @@ public class Token {
             System.err.println(
                     "[Token] An error occcured while trying to load image '" + pictureFile.getAbsolutePath() + "'");
             e.printStackTrace();
+
         }
     }
 

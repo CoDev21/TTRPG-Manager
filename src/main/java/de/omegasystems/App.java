@@ -4,10 +4,14 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Image;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 
 import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
@@ -36,9 +40,10 @@ public class App {
 
     }
 
-    private boolean isDevEnv;
-
     private static App instance;
+    private static File debugRessourceFile = new File(System.getProperty("user.dir") + "\\src\\main\\resources");
+
+    private boolean isDevEnv;
 
     private JFrame frame;
     private MenubarAttributeHolder toolbarAttributes = new MenubarAttributeHolder();
@@ -85,7 +90,7 @@ public class App {
         TokenRendererComponent tokenHandler = new TokenRendererComponent(renderer);
         tokenHandler.registerUIBindings();
 
-       new TokenTooltipComponent(renderer, tokenHandler);
+        new TokenTooltipComponent(renderer, tokenHandler);
     }
 
     private void addMenubarActions() {
@@ -112,7 +117,7 @@ public class App {
     private Image requestImageFromUser() {
         if (isDevEnv)
             try {
-                return ImageIO.read(new File(System.getProperty("user.dir") + "/ressources/img/Tavern_Battlemap.jpg"));
+                return ImageIO.read(loadResourceFile("/img/Tavern_Battlemap.jpg"));
             } catch (Exception e) {
             }
 
@@ -137,7 +142,27 @@ public class App {
         return toolbarAttributes;
     }
 
+    public boolean isDevEnv() {
+        return isDevEnv;
+    }
+
+    public void openErrorDialog(String message) {
+        JOptionPane.showMessageDialog(frame, message);
+    }
+
     public static App getInstance() {
         return instance;
+    }
+
+    public InputStream loadResourceFile(String path) {
+        if (!isDevEnv())
+            return App.class.getClassLoader().getResourceAsStream(path);
+        try {
+            return new FileInputStream(new File(debugRessourceFile, path));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            System.err.println("Couldn't find file located at: '" + new File(debugRessourceFile, path).getAbsolutePath() + "'");
+        }
+        return null;
     }
 }
