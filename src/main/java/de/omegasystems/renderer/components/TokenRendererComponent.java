@@ -1,4 +1,4 @@
-package de.omegasystems.components;
+package de.omegasystems.renderer.components;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -17,16 +17,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.omegasystems.App;
-import de.omegasystems.components.dialog.ChangeValueDialog.DoubleDialog;
-import de.omegasystems.components.dialog.TokenDialog;
 import de.omegasystems.core.Renderer;
-import de.omegasystems.core.Renderer.DrawingComponent;
+import de.omegasystems.core.RenderingComponent;
 import de.omegasystems.core.Token;
 import de.omegasystems.core.TokenHandler;
+import de.omegasystems.renderer.dialog.ChangeValueDialog.DoubleDialog;
+import de.omegasystems.renderer.dialog.TokenDialog;
 import de.omegasystems.utility.Observer;
 import de.omegasystems.utility.Observerhandler;
 
-public class TokenRendererComponent extends MouseAdapter implements DrawingComponent, TokenHandler, KeyListener {
+public class TokenRendererComponent extends MouseAdapter implements RenderingComponent, TokenHandler, KeyListener {
 
     private Observerhandler<TokenHandler> observerhandler = new Observerhandler<>();
 
@@ -40,9 +40,10 @@ public class TokenRendererComponent extends MouseAdapter implements DrawingCompo
 
     private Renderer renderer;
 
-    public TokenRendererComponent(Renderer renderer) {
+    @Override
+    public void setRenderer(Renderer renderer) {
         this.renderer = renderer;
-        renderer.addRenderCallback(this);
+        renderer.addWorldRenderComponent(this);
         renderer.addMouseListener(this);
         renderer.addMouseMotionListener(this);
         renderer.addKeyListener(this);
@@ -78,21 +79,21 @@ public class TokenRendererComponent extends MouseAdapter implements DrawingCompo
     }
 
     @Override
-    public void draw(Graphics2D g, Dimension drawingDimensions, double scale) {
+    public void draw(Graphics2D g, Dimension drawingDimensions) {
 
         for (Token token : tokens) {
 
-            int posX = (int) (token.getPosition().x * scale);
-            int posY = (int) (token.getPosition().y * scale);
+            int posX = (int) (token.getPosition().x);
+            int posY = (int) (token.getPosition().y);
 
             int scaledImageSize = calculateImageSizeFor(token);
             g.drawImage(token.getImage(), posX, posY, scaledImageSize, scaledImageSize, null);
 
-            g.setStroke(new BasicStroke((float) (highlightThickness * scale)));
+            g.setStroke(new BasicStroke((float) (highlightThickness)));
             g.setColor(token.equals(highlightedToken) ? token.getFriendStatus().getHighlight()
                     : token.getFriendStatus().getOutline());
 
-            int outlineOffset = (int) (highlightThickness * scale / 2);
+            int outlineOffset = (int) (highlightThickness / 2);
 
             g.drawRect(posX - outlineOffset, posY - outlineOffset, scaledImageSize + outlineOffset * 2,
                     scaledImageSize + outlineOffset * 2);
@@ -118,17 +119,16 @@ public class TokenRendererComponent extends MouseAdapter implements DrawingCompo
         if (draggedToken == null)
             return;
 
-        var translatedOffset = e.getPoint();
+        var translatedOffset = renderer.getTranslationhandler().getWorldCoordinateFormUISpace(e.getPoint());
         translatedOffset.translate(dragOffset.x, dragOffset.y);
         var tokenSize = calculateImageSizeFor(draggedToken);
-        var maxPos = renderer.getWorldSize();
-        var scale = renderer.getScale();
+        var maxPos = renderer.getDrawingDimensions();
 
         // Clamp the pos so that plaer cannot be dragge doutside the visible playarea
         translatedOffset.x = Math.clamp(translatedOffset.x, 0, (int) (maxPos.getWidth() - tokenSize));
         translatedOffset.y = Math.clamp(translatedOffset.y, 0, (int) (maxPos.getHeight() - tokenSize));
 
-        draggedToken.setPosition(new Point2D.Double(translatedOffset.x / scale, translatedOffset.y / scale));
+        draggedToken.setPosition(new Point2D.Double(translatedOffset.x, translatedOffset.y));
     }
 
     @Override
@@ -147,9 +147,8 @@ public class TokenRendererComponent extends MouseAdapter implements DrawingCompo
         }
 
         var tokenPos = token.getPosition();
-        double scale = renderer.getScale();
-        int posX = (int) (tokenPos.x * scale);
-        int posY = (int) (tokenPos.y * scale);
+        int posX = (int) (tokenPos.x);
+        int posY = (int) (tokenPos.y);
 
         draggedToken = token;
         highlightedToken = token;
@@ -169,24 +168,23 @@ public class TokenRendererComponent extends MouseAdapter implements DrawingCompo
 
     @Override
     public Token getTokenFromPosition(MouseEvent e) {
+        Point worldPoint = renderer.getTranslationhandler().getWorldCoordinateFormUISpace(e.getPoint());
         // Reversed the list to make it consistent with clicking the drawn hierachy
         // (last elements get drawn on top of others)
         for (Token token : tokens.reversed()) {
             var tokenPos = token.getPosition();
-            double scale = renderer.getScale();
+            // double scale = renderer.getScale();
             int tokenSize = calculateImageSizeFor(token);
-            int posX = (int) (tokenPos.x * scale);
-            int posY = (int) (tokenPos.y * scale);
 
-            if (new Rectangle(posX, posY, tokenSize, tokenSize)
-                    .contains(e.getPoint()))
+            if (new Rectangle((int) tokenPos.x, (int) tokenPos.y, tokenSize, tokenSize)
+                    .contains(worldPoint))
                 return token;
         }
         return null;
     }
 
     public int calculateImageSizeFor(Token token) {
-        return (int) (renderer.getScale() * tokenScale * token.getSize().getScale());
+        return (int) (tokenScale * token.getSize().getScale());
     }
 
     @Override

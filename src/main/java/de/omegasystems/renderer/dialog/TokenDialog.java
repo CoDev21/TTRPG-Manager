@@ -1,4 +1,4 @@
-package de.omegasystems.components.dialog;
+package de.omegasystems.renderer.dialog;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -15,12 +15,12 @@ import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import de.omegasystems.components.ComponentBuilder;
 import de.omegasystems.core.Token;
 import de.omegasystems.core.TokenHandler;
 import de.omegasystems.dataobjects.Friendlieness;
 import de.omegasystems.dataobjects.TokenData;
 import de.omegasystems.dataobjects.TokenSize;
+import de.omegasystems.renderer.ComponentBuilder;
 
 public class TokenDialog extends JDialog {
 

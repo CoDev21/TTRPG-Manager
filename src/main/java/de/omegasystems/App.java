@@ -15,13 +15,14 @@ import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import de.omegasystems.components.MenubarComponent;
-import de.omegasystems.components.ScrollingComponent;
-import de.omegasystems.components.TokenRendererComponent;
-import de.omegasystems.components.TokenTooltipComponent;
-import de.omegasystems.components.dialog.ChangeValueDialog;
 import de.omegasystems.core.Renderer;
 import de.omegasystems.dataobjects.MenubarAttributeHolder;
+import de.omegasystems.renderer.MainRenderer;
+import de.omegasystems.renderer.MenubarComponent;
+import de.omegasystems.renderer.components.ImageComponent;
+import de.omegasystems.renderer.components.TokenRendererComponent;
+import de.omegasystems.renderer.components.TokenTooltipComponent;
+import de.omegasystems.renderer.dialog.ChangeValueDialog;
 
 public class App {
 
@@ -68,12 +69,11 @@ public class App {
         if (img == null)
             System.exit(0);
 
-        var gameComponent = new ScrollingComponent(img);
-        var renderer = gameComponent.getRenderer();
-        frame.add(gameComponent);
+        var renderer = new MainRenderer();
+        frame.add(renderer);
         frame.setJMenuBar(new MenubarComponent(toolbarAttributes));
 
-        registerRendererComponents(renderer);
+        registerRendererComponents(img, renderer);
 
         addMenubarActions();
 
@@ -86,11 +86,15 @@ public class App {
 
     }
 
-    private void registerRendererComponents(Renderer renderer) {
-        TokenRendererComponent tokenHandler = new TokenRendererComponent(renderer);
+    private void registerRendererComponents(Image requestedImage, Renderer renderer) {
+        renderer.addWorldRenderComponent(new ImageComponent(requestedImage));
+
+        TokenRendererComponent tokenHandler = new TokenRendererComponent();
+        renderer.addWorldRenderComponent(tokenHandler);
         tokenHandler.registerUIBindings();
 
-        new TokenTooltipComponent(renderer, tokenHandler);
+        renderer.addWorldRenderComponent(new TokenTooltipComponent(tokenHandler));
+
     }
 
     private void addMenubarActions() {
@@ -161,7 +165,8 @@ public class App {
             return new FileInputStream(new File(debugRessourceFile, path));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-            System.err.println("Couldn't find file located at: '" + new File(debugRessourceFile, path).getAbsolutePath() + "'");
+            System.err.println(
+                    "Couldn't find file located at: '" + new File(debugRessourceFile, path).getAbsolutePath() + "'");
         }
         return null;
     }

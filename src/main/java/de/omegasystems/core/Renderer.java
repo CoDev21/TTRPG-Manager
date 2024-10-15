@@ -1,35 +1,51 @@
 package de.omegasystems.core;
 
 import java.awt.Dimension;
-import java.awt.Graphics2D;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelListener;
 
 import javax.swing.JFrame;
 
 public interface Renderer {
 
-    public void addRenderCallback(DrawingComponent onDraw);
+    /**
+     * Adds a rendering component in world space to this renderer. <br>
+     * World Space means, that the position and size of elements changes
+     * automatically based on the user input, for example zooming in and out
+     * 
+     * @param onDraw the rendering component to be used
+     */
+    public void addWorldRenderComponent(RenderingComponent onDraw);
 
-    public void removeRenderCallback(DrawingComponent onDraw);
+    /**
+     * Adds a rendering component in ui space to this renderer.
+     * UI Space means, that the position and size of elements stay fixed in
+     * comparison to the zoomable map. These components are also always rendered on
+     * top of world space components.
+     * 
+     * @param onDraw the rendering component to be used
+     */
+    public void addUIRenderComponent(RenderingComponent onDraw);
 
-    public interface DrawingComponent {
-        public void draw(Graphics2D g, Dimension size, double scale);
+    public void removeWorldRenderComponent(RenderingComponent onDraw);
 
-    }
+    public void removeUIRenderComponent(RenderingComponent onDraw);
 
     public void addMouseListener(MouseListener l);
 
     public void addKeyListener(KeyListener l);
 
     public void addMouseMotionListener(MouseMotionListener l);
+    
+    public void addMouseWheelListener(MouseWheelListener l);
 
     public void scheduleRedraw();
 
     public JFrame getFrame();
 
-    public double getScale();
+    public Dimension getDrawingDimensions();
 
-    public Dimension getWorldSize();
+    public WorldTranslationHandler getTranslationhandler();
 }

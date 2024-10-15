@@ -1,4 +1,4 @@
-package de.omegasystems.components;
+package de.omegasystems.renderer.components;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -11,27 +11,30 @@ import java.awt.geom.Rectangle2D;
 import java.util.Objects;
 
 import de.omegasystems.core.Renderer;
-import de.omegasystems.core.Renderer.DrawingComponent;
+import de.omegasystems.core.RenderingComponent;
 import de.omegasystems.core.Token;
 import de.omegasystems.core.TokenHandler;
 import de.omegasystems.utility.Observer;
 
-public class TokenTooltipComponent extends MouseAdapter implements DrawingComponent, Observer<TokenHandler> {
+public class TokenTooltipComponent extends MouseAdapter implements RenderingComponent, Observer<TokenHandler> {
 
     private Renderer renderer;
     private TokenHandler tokenHandler;
 
     private Token hoveredToken;
 
-    public TokenTooltipComponent(Renderer renderer, TokenHandler th) {
-        this.renderer = renderer;
+    public TokenTooltipComponent(TokenHandler th) {
         this.tokenHandler = th;
-        if (renderer == null || tokenHandler == null)
+        if (tokenHandler == null)
             throw new IllegalArgumentException("[" + this.getClass().getCanonicalName()
-                    + "] Renderer or Tokenhandler were null during initialization");
-
+                    + "] Tokenhandler was null during initialization");
         tokenHandler.addObserver(this);
-        renderer.addRenderCallback(this);
+    }
+
+    @Override
+    public void setRenderer(Renderer renderer) {
+        this.renderer = renderer;
+        renderer.addUIRenderComponent(this);
         renderer.addMouseListener(this);
         renderer.addMouseMotionListener(this);
     }
@@ -48,7 +51,7 @@ public class TokenTooltipComponent extends MouseAdapter implements DrawingCompon
     }
 
     @Override
-    public void draw(Graphics2D g, Dimension canvasSize, double scale) {
+    public void draw(Graphics2D g, Dimension canvasSize) {
         // Hovered Token Infobox drawing
 
         // The second condition should never occur as removed tokens also get cleared
@@ -88,8 +91,8 @@ public class TokenTooltipComponent extends MouseAdapter implements DrawingCompon
 
         // Now that we have the bounds of the Strings, we can check to wich side of the
         // Token we can draw it
-        int posX = (int) (hoveredToken.getPosition().x * scale);
-        int posY = (int) (hoveredToken.getPosition().y * scale);
+        int posX = (int) (hoveredToken.getPosition().x);
+        int posY = (int) (hoveredToken.getPosition().y);
         int imageSize = tokenHandler.calculateImageSizeFor(hoveredToken);
 
         int drawingPosX = posX + imageSize + hTokenDistance;
@@ -134,14 +137,6 @@ public class TokenTooltipComponent extends MouseAdapter implements DrawingCompon
         hoveredToken = newToken;
         notifyChange();
     }
-
-    // @Override
-    // public void mouseDragged(MouseEvent e) {
-    // if (hoveredToken == null)
-    // return;
-    // hoveredToken = null;
-    // notifyChange();
-    // }
 
     private void notifyChange() {
         renderer.scheduleRedraw();

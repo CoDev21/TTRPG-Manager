@@ -6,7 +6,6 @@ import java.io.File;
 import java.util.UUID;
 
 import javax.imageio.ImageIO;
-import javax.swing.JOptionPane;
 
 import de.omegasystems.App;
 import de.omegasystems.dataobjects.Friendlieness;

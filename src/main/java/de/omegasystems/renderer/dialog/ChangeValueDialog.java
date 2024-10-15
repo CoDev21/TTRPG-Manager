@@ -1,4 +1,4 @@
-package de.omegasystems.components.dialog;
+package de.omegasystems.renderer.dialog;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;

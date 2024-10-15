@@ -1,4 +1,4 @@
-package de.omegasystems.components;
+package de.omegasystems.renderer;
 
 import java.awt.event.ActionEvent;
 
