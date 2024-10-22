@@ -22,8 +22,6 @@ public class GridComponent implements RenderingComponent {
     public void setRenderer(Renderer renderer) {
         this.renderer = renderer;
 
-        renderer.addWorldRenderComponent(this);
-
         var GRID_ENABLED = App.getInstance().getToolbarAttributes().VIEW_GRID_ENABLED;
         GRID_ENABLED.addObserver(val -> {
             this.isGridEnabled = val;
@@ -62,17 +60,17 @@ public class GridComponent implements RenderingComponent {
 
     @Override
     public void draw(Graphics2D g, Dimension size) {
-        if (isGridEnabled) {
-            g.setStroke(new BasicStroke((float) (gridThickness * renderer.getTranslationhandler().getScale())));
+        if (!isGridEnabled)
+            return;
+        g.setStroke(new BasicStroke((float) (gridThickness)));
 
-            for (int x = 0; x < size.getWidth() / gridScale; x++) {
-                int xPos = (int) (x * gridScale + gridOffsetX);
-                g.drawLine(xPos, 0, xPos, (int) (size.getWidth()));
-            }
-            for (int y = 0; y < size.getHeight() / gridScale; y++) {
-                int posY = (int) (y * gridScale + gridOffsetY);
-                g.drawLine(0, posY, (int) (size.getHeight()), posY);
-            }
+        for (int x = 0; x <= size.getWidth() / gridScale; x++) {
+            int xPos = (int) (x * gridScale + gridOffsetX);
+            g.drawLine(xPos, 0, xPos, (int) (size.getHeight()));
+        }
+        for (int y = 0; y <= size.getHeight() / gridScale; y++) {
+            int posY = (int) (y * gridScale + gridOffsetY);
+            g.drawLine(0, posY, (int) (size.getWidth()), posY);
         }
     }
 

@@ -122,6 +122,11 @@ public class MainRenderer extends JLabel implements Observer<WorldTranslationHan
         return (JFrame) SwingUtilities.getWindowAncestor(this);
     }
 
+    @Override
+    public Dimension getScreenSize() {
+        return new Dimension(this.getWidth(), this.getHeight());
+    }
+
     private void recalculateDrawingArea() {
         drawingArea = new Dimension();
         worldComponents.forEach(component -> {

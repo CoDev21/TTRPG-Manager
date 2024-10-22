@@ -150,9 +150,10 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
         int posX = (int) (tokenPos.x);
         int posY = (int) (tokenPos.y);
 
+        var clickedPos = renderer.getTranslationhandler().getWorldCoordinateFormUISpace(e.getPoint());
         draggedToken = token;
         highlightedToken = token;
-        dragOffset = new Point(posX - e.getX(), posY - e.getY());
+        dragOffset = new Point((int) (posX - clickedPos.getX()), (int) (posY - clickedPos.getY()));
 
         // Re-add the token to the list at the back so that it gets drawn last (above
         // all the other Tokens)

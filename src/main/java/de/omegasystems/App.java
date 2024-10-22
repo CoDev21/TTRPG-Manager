@@ -19,6 +19,7 @@ import de.omegasystems.core.Renderer;
 import de.omegasystems.dataobjects.MenubarAttributeHolder;
 import de.omegasystems.renderer.MainRenderer;
 import de.omegasystems.renderer.MenubarComponent;
+import de.omegasystems.renderer.components.GridComponent;
 import de.omegasystems.renderer.components.ImageComponent;
 import de.omegasystems.renderer.components.TokenRendererComponent;
 import de.omegasystems.renderer.components.TokenTooltipComponent;
@@ -88,6 +89,7 @@ public class App {
 
     private void registerRendererComponents(Image requestedImage, Renderer renderer) {
         renderer.addWorldRenderComponent(new ImageComponent(requestedImage));
+        renderer.addWorldRenderComponent(new GridComponent());
 
         TokenRendererComponent tokenHandler = new TokenRendererComponent();
         renderer.addWorldRenderComponent(tokenHandler);

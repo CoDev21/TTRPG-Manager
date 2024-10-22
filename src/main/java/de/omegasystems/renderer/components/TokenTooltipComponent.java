@@ -59,13 +59,15 @@ public class TokenTooltipComponent extends MouseAdapter implements RenderingComp
         if (hoveredToken == null || !tokenHandler.hasToken(hoveredToken))
             return;
 
-        int distanceBetweenLines = 3;
-        int hPadding = 4;
-        int vPadding = 4;
+        double scale = renderer.getTranslationhandler().getScale();
 
-        int hTokenDistance = 10;
+        int distanceBetweenLines = (int) (3 * scale);
+        int hPadding = (int) (4 * scale);
+        int vPadding = (int) (4 * scale);
 
-        g.setFont(new Font("Georgia", Font.BOLD, 15));
+        int hTokenDistance = (int) (10 * scale);
+
+        g.setFont(new Font("Georgia", Font.BOLD, (int) (15 * renderer.getTranslationhandler().getScale())));
         Font f = g.getFont();
 
         // Calculate bounds of Textbox
@@ -106,7 +108,7 @@ public class TokenTooltipComponent extends MouseAdapter implements RenderingComp
 
         // Draw the actual Thing
         g.setColor(Color.LIGHT_GRAY);
-        g.setStroke(new BasicStroke(2.0f));
+        g.setStroke(new BasicStroke((float) (2.0 * renderer.getTranslationhandler().getScale())));
         g.fillRect(drawingPosX, drawingPosY, (int) drawingDimensions.getWidth(), (int) drawingDimensions.getHeight());
         g.setColor(Color.BLACK);
 

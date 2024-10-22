@@ -46,6 +46,8 @@ public interface Renderer {
     public JFrame getFrame();
 
     public Dimension getDrawingDimensions();
+    public Dimension getScreenSize();
 
     public WorldTranslationHandler getTranslationhandler();
+
 }
