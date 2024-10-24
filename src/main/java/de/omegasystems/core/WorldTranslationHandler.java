@@ -1,15 +1,13 @@
 package de.omegasystems.core;
 
-import java.awt.Dimension;
 import java.awt.Point;
+import java.awt.geom.Point2D;
 
-import de.omegasystems.utility.Observable;
-
-public interface WorldTranslationHandler extends Observable<WorldTranslationHandler> {
+public interface WorldTranslationHandler {
 
     public double getScale();
 
-    public Dimension getOffset();
+    public Point2D.Double getOffset();
 
     public Point getWorldCoordinateFormUISpace(Point uiPoint);
 

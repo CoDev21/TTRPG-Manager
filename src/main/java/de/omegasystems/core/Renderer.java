@@ -1,6 +1,7 @@
 package de.omegasystems.core;
 
 import java.awt.Dimension;
+import java.awt.event.ComponentListener;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -40,6 +41,8 @@ public interface Renderer {
     public void addMouseMotionListener(MouseMotionListener l);
     
     public void addMouseWheelListener(MouseWheelListener l);
+
+    public void addComponentListener(ComponentListener l);
 
     public void scheduleRedraw();
 

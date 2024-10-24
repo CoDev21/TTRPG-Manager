@@ -1,72 +1,159 @@
 package de.omegasystems.renderer;
 
-import java.awt.Dimension;
 import java.awt.Point;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.awt.geom.Point2D;
+
+import javax.swing.Timer;
 
 import de.omegasystems.core.Renderer;
 import de.omegasystems.core.WorldTranslationHandler;
-import de.omegasystems.utility.Observer;
-import de.omegasystems.utility.Observerhandler;
 
 public class TranslationHandler implements WorldTranslationHandler {
 
-    // Constant k determines how fast the scaling increases or decreases.
-    private static final double K = 0.1;
-    private static final double scrollMultiplier = 0.01;
-
-    /**
-     * Calculates the scale based on the current scrolling value of scrollVal.
-     * At x = 0, the function returns 1.
-     * For x > 0, the scale increases, and for x < 0, it approaches 0.
-     *
-     * @param x the input value, determined by the scroll wheel.
-     * @return the scale factor.
-     */
-    public static double getScale(double x) {
-        return Math.exp(K * x);
-    }
-
-    private Observerhandler<WorldTranslationHandler> observerhandler = new Observerhandler<>();
     private Renderer renderer;
-
-    // For values < 0 this zooms in, for > 0 it sooms out. See getScale()
     private double scale = 1.0;
-    private int scrollValue = 0;
+    private double targetScale = 1.0;
+    private Point2D.Double offset = new Point2D.Double(0, 0);
+    private Point2D.Double targetOffset = new Point2D.Double(0, 0);
+    private Point lastDragPoint;
+    private Timer animationTimer;
 
-    private double vScroll = 0;
-    private double hScroll = 0;
+    // Sensitivity control variables
+    public double scrollSensitivity = 10.0;
+    public double zoomSensitivity = 1.3;
 
     public TranslationHandler(Renderer renderer) {
-        super();
-
         this.renderer = renderer;
 
         renderer.addMouseWheelListener(new MouseWheelListener() {
             public void mouseWheelMoved(final MouseWheelEvent e) {
                 if (e.isControlDown()) {
-                    updateScale(e.getWheelRotation());
-                    return;
+                    // Zoom in or out
+                    int notches = -e.getWheelRotation();
+                    targetScale = scale * (notches > 0 ? zoomSensitivity : 1 / zoomSensitivity);
+                    targetScale = clampScale(targetScale);
 
+                    // Calculate the cursor position relative to the image
+                    Point cursor = e.getPoint();
+                    double cursorX = (cursor.getX() - offset.x) / scale;
+                    double cursorY = (cursor.getY() - offset.y) / scale;
+
+                    // Adjust target offsets to zoom towards the cursor
+                    targetOffset.x = cursor.getX() - cursorX * targetScale;
+                    targetOffset.y = cursor.getY() - cursorY * targetScale;
+
+                    clampOffsets();
+                    return;
                 }
-                int scroll = e.getUnitsToScroll();
+                int scroll = -e.getUnitsToScroll();
                 if (e.isShiftDown()) {
-                    updateHOffset(scroll);
+                    // Move the image sideways
+                    targetOffset.x += scroll * scrollSensitivity;
                 } else {
-                    updateVOffset(scroll);
+                    // Move the image up and down
+                    targetOffset.y += scroll * scrollSensitivity;
+                }
+                clampOffsets();
+            }
+        });
+
+        renderer.addMouseListener(new MouseAdapter() {
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.getButton() == MouseEvent.BUTTON2) {
+                    lastDragPoint = e.getPoint();
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.getButton() == MouseEvent.BUTTON2) {
+                    lastDragPoint = null;
                 }
             }
         });
 
-        // TODO: Add moving around the world by using middle mouse button
-        // renderer.addMouseMotionListener(new MouseAdapter() {
-        // @Override
-        // public void mouseMoved(MouseEvent e) {
-        // if(e.getMod)
-        // }
-        // });
+        renderer.addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                if (lastDragPoint != null) {
+                    Point currentPoint = e.getPoint();
+                    targetOffset.x += (currentPoint.getX() - lastDragPoint.getX());
+                    targetOffset.y += (currentPoint.getY() - lastDragPoint.getY());
+                    lastDragPoint = currentPoint;
+                    clampOffsets();
+                }
+            }
+        });
 
+        renderer.addComponentListener(new ComponentAdapter() {
+
+            @Override
+            public void componentResized(ComponentEvent e) {
+                update();
+            }
+        });
+
+        animationTimer = new Timer(16, e -> update());
+        animationTimer.start();
+    }
+
+    public void update() {
+        // Interpolate scale and offsets
+        scale = lerp(scale, targetScale, 0.1);
+        offset.x = lerp(offset.x, targetOffset.x, 0.1);
+        offset.y = lerp(offset.y, targetOffset.y, 0.1);
+        renderer.scheduleRedraw();
+    }
+
+    private double clampScale(double newScale) {
+        var sdrawingDim = renderer.getScreenSize();
+        var screenDim = renderer.getScreenSize();
+
+        int viewWidth = (int) screenDim.getWidth();
+        int viewHeight = (int) screenDim.getHeight();
+
+        double minScaleX = (double) viewWidth / renderer.getDrawingDimensions().getWidth();
+        double minScaleY = (double) viewHeight / renderer.getDrawingDimensions().getHeight();
+        double minScale = Math.max(minScaleX, minScaleY);
+
+        return Math.max(newScale, minScale);
+    }
+
+    private void clampOffsets() {
+        var drawingDim = renderer.getScreenSize();
+        var screenDim = renderer.getScreenSize();
+
+        int viewWidth = (int) screenDim.getWidth();
+        int viewHeight = (int) screenDim.getHeight();
+
+        int imageWidth = (int) (drawingDim.getWidth() * targetScale);
+        int imageHeight = (int) (drawingDim.getHeight() * targetScale);
+
+        // Clamp targetOffsetX
+        if (targetOffset.x > 0) {
+            targetOffset.x = 0;
+        } else if (targetOffset.x < viewWidth - imageWidth) {
+            targetOffset.x = viewWidth - imageWidth;
+        }
+
+        // Clamp targetOffsetY
+        if (targetOffset.y > 0) {
+            targetOffset.y = 0;
+        } else if (targetOffset.y < viewHeight - imageHeight) {
+            targetOffset.y = viewHeight - imageHeight;
+        }
+    }
+
+    private double lerp(double start, double end, double t) {
+        return start + t * (end - start);
     }
 
     @Override
@@ -75,80 +162,14 @@ public class TranslationHandler implements WorldTranslationHandler {
     }
 
     @Override
-    public Dimension getOffset() {
-        return new Dimension(
-                (int) (Math.max(renderer.getDrawingDimensions().getWidth()*(1/scale) - renderer.getScreenSize().getWidth(), 0)
-                        * hScroll),
-                (int) (Math.max(renderer.getDrawingDimensions().getHeight()*(1/scale) - renderer.getScreenSize().getHeight(), 0)
-                        * vScroll));
+    public Point2D.Double getOffset() {
+        return offset;
     }
 
     @Override
     public Point getWorldCoordinateFormUISpace(Point uiPoint) {
-        var offset = getOffset();
-        var ret = new Point((int) (uiPoint.x * scale + offset.getWidth()),
-                (int) (uiPoint.y * scale + offset.getHeight()));
-
-        return ret;
+        double worldX = (uiPoint.getX() - offset.x) / scale;
+        double worldY = (uiPoint.getY() - offset.y) / scale;
+        return new Point((int) worldX, (int) worldY);
     }
-
-    private void updateHOffset(int unitsToScroll) {
-        hScroll += unitsToScroll * scrollMultiplier * scale;
-        hScroll = Math.clamp(hScroll, 0, 1);
-        notifyObservers(this);
-    }
-
-    private void updateVOffset(int unitsToScroll) {
-        vScroll += unitsToScroll * scrollMultiplier * scale;
-        vScroll = Math.clamp(vScroll, 0, 1);
-        notifyObservers(this);
-    }
-
-    private void updateScale(int scrolling) {
-        if (isWorldSmallerThanScreen() && scrolling > 0)
-            return;
-        scrollValue += scrolling;
-        this.scale = getScale(scrollValue);
-        clampMiniumScale();
-        notifyObservers(this);
-    };
-
-    private boolean isWorldSmallerThanScreen() {
-        double newScaleToCheck = getScale(scrollValue);
-        var screenSize = renderer.getScreenSize();
-        var drawingSize = renderer.getDrawingDimensions();
-
-        return drawingSize.getWidth() * (1 / newScaleToCheck) < screenSize.getWidth() ||
-                drawingSize.getHeight() * (1 / newScaleToCheck) < screenSize.getHeight();
-    }
-
-    private void clampMiniumScale() {
-        var screenSize = renderer.getScreenSize();
-        var drawingSize = renderer.getDrawingDimensions();
-
-        if (drawingSize.getWidth() * (1 / scale) < screenSize.getWidth()) {
-            scale = drawingSize.getWidth() / screenSize.getWidth();
-        }
-        if (drawingSize.getHeight() * (1 / scale) < screenSize.getHeight()) {
-            scale = drawingSize.getHeight() / screenSize.getHeight();
-        }
-
-    }
-
-    @Override
-    public void addObserver(Observer<WorldTranslationHandler> obs) {
-        observerhandler.addObserver(obs);
-    }
-
-    @Override
-    public void removeObserver(Observer<WorldTranslationHandler> obs) {
-        observerhandler.removeObserver(obs);
-    }
-
-    @Override
-    public void notifyObservers(WorldTranslationHandler value) {
-        observerhandler.notifyObservers(value);
-
-    }
-
 }

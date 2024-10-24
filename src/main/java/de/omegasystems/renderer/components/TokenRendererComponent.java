@@ -114,6 +114,7 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
 
     }
 
+    // Token dragging
     @Override
     public void mouseDragged(MouseEvent e) {
         if (draggedToken == null)
@@ -125,8 +126,10 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
         var maxPos = renderer.getDrawingDimensions();
 
         // Clamp the pos so that plaer cannot be dragge doutside the visible playarea
-        translatedOffset.x = Math.clamp(translatedOffset.x, 0, (int) (maxPos.getWidth() - tokenSize));
-        translatedOffset.y = Math.clamp(translatedOffset.y, 0, (int) (maxPos.getHeight() - tokenSize));
+        translatedOffset.x = clamp(translatedOffset.x, 0, (int) (maxPos.getWidth() - tokenSize));
+        translatedOffset.y = clamp(translatedOffset.y, 0, (int) (maxPos.getHeight() - tokenSize));
+        
+        
 
         draggedToken.setPosition(new Point2D.Double(translatedOffset.x, translatedOffset.y));
     }
@@ -172,7 +175,7 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
         Point worldPoint = renderer.getTranslationhandler().getWorldCoordinateFormUISpace(e.getPoint());
         // Reversed the list to make it consistent with clicking the drawn hierachy
         // (last elements get drawn on top of others)
-        for (Token token : tokens.reversed()) {
+        for (Token token : tokens) {
             var tokenPos = token.getPosition();
             // double scale = renderer.getScale();
             int tokenSize = calculateImageSizeFor(token);
@@ -262,5 +265,9 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
     @Override
     public void removeObserver(Observer<TokenHandler> obs) {
         observerhandler.removeObserver(obs);
+    }
+
+    private int clamp(int value, int min, int max) {
+        return value > max ? max : value < min ? min : value;
     }
 }

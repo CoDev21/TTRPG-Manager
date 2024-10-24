@@ -120,7 +120,7 @@ public class App {
      * 
      * @return An image if successfull or null otherwise
      */
-    private Image requestImageFromUser() {
+    public Image requestImageFromUser() {
         if (isDevEnv)
             try {
                 return ImageIO.read(loadResourceFile("/img/Tavern_Battlemap.jpg"));

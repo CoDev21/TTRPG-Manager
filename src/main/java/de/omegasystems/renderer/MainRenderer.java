@@ -4,6 +4,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,10 +30,8 @@ public class MainRenderer extends JLabel implements Observer<WorldTranslationHan
     public MainRenderer() {
         super();
 
-        // getViewport().setView(renderer);
         setFocusable(true);
         translationHandler = new TranslationHandler(this);
-        translationHandler.addObserver(this);
     }
 
     @Override
@@ -42,10 +41,9 @@ public class MainRenderer extends JLabel implements Observer<WorldTranslationHan
 
         // Transform the graphics object for world space coordinates
         AffineTransform oldForm = g2d.getTransform();
-        var scale = translationHandler.getScale();
-        var offset = translationHandler.getOffset();
-        g2d.scale(1 / scale, 1 / scale);
-        g2d.translate(-offset.getWidth(), -offset.getHeight());
+        g2d.scale(translationHandler.getScale(), translationHandler.getScale());
+        Point2D.Double offset = translationHandler.getOffset();
+        g2d.translate(offset.x / translationHandler.getScale(), offset.y / translationHandler.getScale());
 
         worldComponents.forEach(callback -> callback.draw(g2d, drawingArea));
         // Reset the transform for ui elements
