@@ -2,6 +2,7 @@ package de.omegasystems.renderer.components;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics2D;
 
 import de.omegasystems.core.Renderer;
@@ -15,6 +16,9 @@ public class DebugOverlayComponent implements RenderingComponent {
         if (renderer != null) {
             Dimension drawingDimensions = renderer.getDrawingDimensions();
             Dimension screenSize = renderer.getScreenSize();
+
+            // Set the font
+            g.setFont(new Font("Arial", Font.PLAIN, 12));
 
             g.setColor(Color.WHITE);
             g.drawString("Drawing Dimensions: " + drawingDimensions.width + "x" + drawingDimensions.height, 10, 20);

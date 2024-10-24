@@ -98,7 +98,8 @@ public class App {
 
         renderer.addWorldRenderComponent(new TokenTooltipComponent(tokenHandler));
 
-        renderer.addUIRenderComponent(new DebugOverlayComponent());
+        if (isDevEnv())
+            renderer.addUIRenderComponent(new DebugOverlayComponent());
 
     }
 
