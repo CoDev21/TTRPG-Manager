@@ -3,12 +3,14 @@ package de.omegasystems.renderer.components;
 import java.awt.BasicStroke;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
+import java.awt.Point;
 
 import de.omegasystems.App;
 import de.omegasystems.core.Renderer;
 import de.omegasystems.core.RenderingComponent;
+import de.omegasystems.core.WorldGrid;
 
-public class GridComponent implements RenderingComponent {
+public class GridComponent implements RenderingComponent, WorldGrid {
 
     double gridScale = 64.0;
     double gridThickness = 2;
@@ -74,4 +76,11 @@ public class GridComponent implements RenderingComponent {
         }
     }
 
+    @Override
+    public Point getContainingCellOrigin(Point pos) {
+        int cellX = (int) ((pos.x - gridOffsetX) / gridScale) * (int) gridScale + (int) gridOffsetX;
+        int cellY = (int) ((pos.y - gridOffsetY) / gridScale) * (int) gridScale + (int) gridOffsetY;
+        return new Point(cellX, cellY);
+    }
 }
+

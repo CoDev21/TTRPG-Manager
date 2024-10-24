@@ -21,6 +21,7 @@ import de.omegasystems.core.Renderer;
 import de.omegasystems.core.RenderingComponent;
 import de.omegasystems.core.Token;
 import de.omegasystems.core.TokenHandler;
+import de.omegasystems.core.WorldGrid;
 import de.omegasystems.renderer.dialog.ChangeValueDialog.DoubleDialog;
 import de.omegasystems.renderer.dialog.TokenDialog;
 import de.omegasystems.utility.Observer;
@@ -120,16 +121,21 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
         if (draggedToken == null)
             return;
 
-        var translatedOffset = renderer.getTranslationhandler().getWorldCoordinateFormUISpace(e.getPoint());
+        var clickedWorldPos = renderer.getTranslationhandler().getWorldCoordinateFormUISpace(e.getPoint());
+        var translatedOffset = (Point) clickedWorldPos.clone();
         translatedOffset.translate(dragOffset.x, dragOffset.y);
+
+        var worldGrid = renderer.getComponentImplementing(WorldGrid.class);
+        if (e.isControlDown() && worldGrid != null) {
+            translatedOffset = worldGrid.getContainingCellOrigin(clickedWorldPos);
+        }
+
         var tokenSize = calculateImageSizeFor(draggedToken);
         var maxPos = renderer.getDrawingDimensions();
 
         // Clamp the pos so that plaer cannot be dragge doutside the visible playarea
         translatedOffset.x = clamp(translatedOffset.x, 0, (int) (maxPos.getWidth() - tokenSize));
         translatedOffset.y = clamp(translatedOffset.y, 0, (int) (maxPos.getHeight() - tokenSize));
-        
-        
 
         draggedToken.setPosition(new Point2D.Double(translatedOffset.x, translatedOffset.y));
     }
@@ -144,9 +150,9 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
     public void mousePressed(MouseEvent e) {
         Token token = getTokenFromPosition(e);
 
-        if(e.getButton() != MouseEvent.BUTTON1)
+        if (e.getButton() != MouseEvent.BUTTON1)
             return;
-        
+
         if (token == null) {
             highlightedToken = null;
             notifyChange();

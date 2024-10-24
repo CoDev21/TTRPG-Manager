@@ -53,4 +53,6 @@ public interface Renderer {
 
     public WorldTranslationHandler getTranslationhandler();
 
+    public <T> T getComponentImplementing(Class<T> interfaceClass);
+
 }

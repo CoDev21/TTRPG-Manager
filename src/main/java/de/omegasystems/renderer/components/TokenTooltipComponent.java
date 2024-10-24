@@ -74,7 +74,7 @@ public class TokenTooltipComponent extends MouseAdapter implements RenderingComp
         if (hoveredToken == null || !tokenHandler.hasToken(hoveredToken))
             return;
 
-        double scale = renderer.getTranslationhandler().getScale();
+        double scale = 1 / renderer.getTranslationhandler().getScale();
 
         int distanceBetweenLines = (int) (3 * scale);
         int hPadding = (int) (4 * scale);
@@ -82,7 +82,7 @@ public class TokenTooltipComponent extends MouseAdapter implements RenderingComp
 
         int hTokenDistance = (int) (10 * scale);
 
-        g.setFont(new Font("Georgia", Font.BOLD, (int) (15 * renderer.getTranslationhandler().getScale())));
+        g.setFont(new Font("Georgia", Font.BOLD, (int) (15 * scale)));
         Font f = g.getFont();
 
         // Calculate bounds of Textbox

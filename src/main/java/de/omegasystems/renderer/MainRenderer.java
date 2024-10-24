@@ -138,4 +138,18 @@ public class MainRenderer extends JLabel implements Observer<WorldTranslationHan
         });
     }
 
+    public <T> T getComponentImplementing(Class<T> interfaceClass) {
+        for (RenderingComponent component : worldComponents) {
+            if (interfaceClass.isInstance(component)) {
+                return interfaceClass.cast(component);
+            }
+        }
+        for (RenderingComponent component : uiComponents) {
+            if (interfaceClass.isInstance(component)) {
+                return interfaceClass.cast(component);
+            }
+        }
+        return null;
+    }
+
 }
