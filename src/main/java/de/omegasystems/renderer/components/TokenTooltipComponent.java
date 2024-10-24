@@ -9,6 +9,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 import java.util.Objects;
+import javax.swing.Timer;
 
 import de.omegasystems.core.Renderer;
 import de.omegasystems.core.RenderingComponent;
@@ -22,6 +23,14 @@ public class TokenTooltipComponent extends MouseAdapter implements RenderingComp
     private TokenHandler tokenHandler;
 
     private Token hoveredToken;
+    private Token pendingToken;
+    private Timer tooltipTimer;
+    private Timer fadeInTimer;
+    private float opacity;
+
+    private static final int TOOLTIP_DELAY = 500; // Delay in milliseconds
+    private static final int FADE_IN_DURATION = 100; // Duration in milliseconds
+    private static final int FADE_IN_INTERVAL = 20; // Interval in milliseconds
 
     public TokenTooltipComponent(TokenHandler th) {
         this.tokenHandler = th;
@@ -29,6 +38,12 @@ public class TokenTooltipComponent extends MouseAdapter implements RenderingComp
             throw new IllegalArgumentException("[" + this.getClass().getCanonicalName()
                     + "] Tokenhandler was null during initialization");
         tokenHandler.addObserver(this);
+
+        tooltipTimer = new Timer(TOOLTIP_DELAY, e -> startFadeIn());
+        tooltipTimer.setRepeats(false);
+
+        fadeInTimer = new Timer(FADE_IN_INTERVAL, e -> updateOpacity());
+        fadeInTimer.setRepeats(true);
     }
 
     @Override
@@ -107,10 +122,10 @@ public class TokenTooltipComponent extends MouseAdapter implements RenderingComp
             drawingPosY = (int) (canvasSize.getHeight() - drawingDimensions.getHeight());
 
         // Draw the actual Thing
-        g.setColor(Color.LIGHT_GRAY);
+        g.setColor(new Color(192, 192, 192, (int) (opacity * 255)));
         g.setStroke(new BasicStroke((float) (2.0 * renderer.getTranslationhandler().getScale())));
         g.fillRect(drawingPosX, drawingPosY, (int) drawingDimensions.getWidth(), (int) drawingDimensions.getHeight());
-        g.setColor(Color.BLACK);
+        g.setColor(new Color(0, 0, 0, (int) (opacity * 255)));
 
         int curPosX = drawingPosX + hPadding;
         int curPosY = drawingPosY + vPadding + titleHeight;
@@ -128,6 +143,9 @@ public class TokenTooltipComponent extends MouseAdapter implements RenderingComp
             return;
 
         hoveredToken = null;
+        tooltipTimer.stop();
+        fadeInTimer.stop();
+        opacity = 0;
         notifyChange();
     }
 
@@ -136,12 +154,35 @@ public class TokenTooltipComponent extends MouseAdapter implements RenderingComp
         var newToken = tokenHandler.getTokenFromPosition(e);
         if (Objects.equals(newToken, hoveredToken))
             return;
-        hoveredToken = newToken;
+
+        pendingToken = newToken;
+        if (newToken == null) {
+            hoveredToken = null;
+            tooltipTimer.stop();
+            fadeInTimer.stop();
+            opacity = 0;
+            notifyChange();
+        } else {
+            tooltipTimer.restart();
+        }
+    }
+
+    private void startFadeIn() {
+        opacity = 0;
+        hoveredToken = pendingToken;
+        fadeInTimer.restart();
+    }
+
+    private void updateOpacity() {
+        opacity += (float) FADE_IN_INTERVAL / FADE_IN_DURATION;
+        if (opacity >= 1) {
+            opacity = 1;
+            fadeInTimer.stop();
+        }
         notifyChange();
     }
 
     private void notifyChange() {
         renderer.scheduleRedraw();
     }
-
 }

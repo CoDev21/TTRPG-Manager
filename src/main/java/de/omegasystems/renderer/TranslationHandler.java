@@ -114,7 +114,6 @@ public class TranslationHandler implements WorldTranslationHandler {
     }
 
     private double clampScale(double newScale) {
-        var sdrawingDim = renderer.getScreenSize();
         var screenDim = renderer.getScreenSize();
 
         int viewWidth = (int) screenDim.getWidth();
@@ -128,7 +127,7 @@ public class TranslationHandler implements WorldTranslationHandler {
     }
 
     private void clampOffsets() {
-        var drawingDim = renderer.getScreenSize();
+        var drawingDim = renderer.getDrawingDimensions();
         var screenDim = renderer.getScreenSize();
 
         int viewWidth = (int) screenDim.getWidth();

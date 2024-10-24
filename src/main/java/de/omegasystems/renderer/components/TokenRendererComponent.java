@@ -143,6 +143,10 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
     @Override
     public void mousePressed(MouseEvent e) {
         Token token = getTokenFromPosition(e);
+
+        if(e.getButton() != MouseEvent.BUTTON1)
+            return;
+        
         if (token == null) {
             highlightedToken = null;
             notifyChange();

@@ -41,9 +41,9 @@ public class MainRenderer extends JLabel implements Observer<WorldTranslationHan
 
         // Transform the graphics object for world space coordinates
         AffineTransform oldForm = g2d.getTransform();
-        g2d.scale(translationHandler.getScale(), translationHandler.getScale());
         Point2D.Double offset = translationHandler.getOffset();
-        g2d.translate(offset.x / translationHandler.getScale(), offset.y / translationHandler.getScale());
+        g2d.translate(offset.x, offset.y);
+        g2d.scale(translationHandler.getScale(), translationHandler.getScale());
 
         worldComponents.forEach(callback -> callback.draw(g2d, drawingArea));
         // Reset the transform for ui elements
