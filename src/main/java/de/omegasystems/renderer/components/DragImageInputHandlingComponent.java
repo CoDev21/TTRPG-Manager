@@ -2,9 +2,11 @@ package de.omegasystems.renderer.components;
 
 import java.awt.Dimension;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -54,7 +56,7 @@ public class DragImageInputHandlingComponent implements RenderingComponent {
                         try {
                             ImageIO.read(file);
 
-                            handleImageImport(file);
+                            handleImageImport(support.getDropLocation().getDropPoint(), file);
                         } catch (IOException e) {
                             System.err.println("Failed to read image file: " + file.getName());
                             e.printStackTrace();
@@ -71,7 +73,7 @@ public class DragImageInputHandlingComponent implements RenderingComponent {
 
     }
 
-    private void handleImageImport(File file) {
+    private void handleImageImport(Point sourcePos, File file) {
         TokenHandler tokenHandler = renderer.getComponentImplementing(TokenHandler.class);
 
         if (tokenHandler == null)
@@ -84,6 +86,9 @@ public class DragImageInputHandlingComponent implements RenderingComponent {
         tokenData.getName().setValue(filenameWithoutExtension);
         tokenData.getPictureFile().setValue(file);
 
-        tokenHandler.addToken(new Token(tokenData, tokenHandler));
+        var token = new Token(tokenData, tokenHandler);
+        var srcPos = renderer.getTranslationhandler().getWorldCoordinateFormUISpace(sourcePos);
+        token.setPosition(new Point2D.Double(srcPos.getX(), srcPos.getY()));
+        tokenHandler.addToken(token);
     }
 }

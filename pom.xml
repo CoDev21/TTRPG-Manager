@@ -8,7 +8,7 @@
   <artifactId>ttrpg</artifactId>
   <version>1.0-SNAPSHOT</version>
 
-  <name>ttrpg</name>
+  <name>ttrpg dinges</name>
   <!-- FIXME change it to the project's website -->
   <url>http://www.example.com</url>
 
@@ -27,6 +27,12 @@
   </dependencies>
 
   <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
     <pluginManagement>      <!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
       <plugins>
         <!-- clean lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle -->
@@ -50,40 +56,40 @@
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>
           <configuration>
-          <archive>
-            <!-- Configures the content of the created manifest -->
-            <manifest>
-              <!-- Adds the classpath to the created manifest -->
-              <addClasspath>true</addClasspath>
-              <!-- Specifies that all dependencies of our application are found -->
-              <!-- Configures the main class of the application -->
-              <mainClass>de.omegasystems.App</mainClass>
-            </manifest>
-          </archive>
-          <!-- <includes>
+            <archive>
+              <!-- Configures the content of the created manifest -->
+              <manifest>
+                <!-- Adds the classpath to the created manifest -->
+                <addClasspath>true</addClasspath>
+                <!-- Specifies that all dependencies of our application are found -->
+                <!-- Configures the main class of the application -->
+                <mainClass>de.omegasystems.App</mainClass>
+              </manifest>
+            </archive>
+            <!-- <includes>
             <include>**/ressources/*</include>
           </includes> -->
-        </configuration>
-        <version>3.0.2</version>
-      </plugin>
-      <plugin>
-        <artifactId>maven-install-plugin</artifactId>
-        <version>2.5.2</version>
-      </plugin>
-      <plugin>
-        <artifactId>maven-deploy-plugin</artifactId>
-        <version>2.8.2</version>
-      </plugin>
-      <!-- site lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#site_Lifecycle -->
-      <plugin>
-        <artifactId>maven-site-plugin</artifactId>
-        <version>3.7.1</version>
-      </plugin>
-      <plugin>
-        <artifactId>maven-project-info-reports-plugin</artifactId>
-        <version>3.0.0</version>
-      </plugin>
-    </plugins>
-  </pluginManagement>
-</build>
+          </configuration>
+          <version>3.0.2</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-install-plugin</artifactId>
+          <version>2.5.2</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <version>2.8.2</version>
+        </plugin>
+        <!-- site lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#site_Lifecycle -->
+        <plugin>
+          <artifactId>maven-site-plugin</artifactId>
+          <version>3.7.1</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-project-info-reports-plugin</artifactId>
+          <version>3.0.0</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
 </project>

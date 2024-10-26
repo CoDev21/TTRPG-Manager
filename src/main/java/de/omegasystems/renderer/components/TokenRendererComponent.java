@@ -14,6 +14,7 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import de.omegasystems.App;
@@ -203,15 +204,22 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
         if (!e.isControlDown()) {
             highlightedTokens.clear();
         }
-        highlightedTokens.add(token);
+
+        if (highlightedTokens.contains(token))
+            highlightedTokens.remove(token);
+        else
+            highlightedTokens.add(token);
 
         draggedToken = token;
         dragOffset = new Point((int) (posX - clickedPos.getX()), (int) (posY - clickedPos.getY()));
 
-        // Re-add the token to the list at the back so that it gets drawn last (above
-        // all the other Tokens)
-        tokens.remove(token);
-        tokens.add(token);
+        if (!e.isControlDown()) {
+            // Re-add the token to the list at the back so that it gets drawn last (above
+            // all the other Tokens)
+            tokens.remove(token);
+            tokens.add(token);
+        }
+        
         notifyChange();
     }
 
@@ -260,7 +268,9 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
         Point worldPoint = renderer.getTranslationhandler().getWorldCoordinateFormUISpace(e.getPoint());
         // Reversed the list to make it consistent with clicking the drawn hierachy
         // (last elements get drawn on top of others)
-        for (Token token : tokens) {
+        var tmpList = new ArrayList<>(tokens);
+        Collections.reverse(tmpList);
+        for (Token token : tmpList) {
             var tokenPos = token.getPosition();
             // double scale = renderer.getScale();
             int tokenSize = calculateImageSizeFor(token);

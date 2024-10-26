@@ -15,6 +15,7 @@ import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import de.omegasystems.core.FullscreenComponent;
 import de.omegasystems.core.Renderer;
 import de.omegasystems.dataobjects.MenubarAttributeHolder;
 import de.omegasystems.renderer.MainRenderer;
@@ -102,6 +103,7 @@ public class App {
         renderer.addWorldRenderComponent(new MeasuringToolsComponent());
 
         renderer.addUIRenderComponent(new DragImageInputHandlingComponent());
+        renderer.addUIRenderComponent(new FullscreenComponent());
 
         if (isDevEnv())
             renderer.addUIRenderComponent(new DebugOverlayComponent());

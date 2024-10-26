@@ -25,6 +25,7 @@ import de.omegasystems.core.RenderingComponent;
 public class MeasuringToolsComponent implements RenderingComponent {
 
     private Renderer renderer;
+
     private MeasurmentForm currentForm = null;
 
     private Point startPoint = new Point();
@@ -38,16 +39,15 @@ public class MeasuringToolsComponent implements RenderingComponent {
         var inputMap = frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         var actionMap = frame.getRootPane().getActionMap();
 
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ALT, 0, false), "doNothing");
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ALT, 0, true), "doNothing");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ALT, 0, false), "createMeasurement");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ALT, 0, true), "createMeasurement");
 
-        actionMap.put("doNothing", new AbstractAction() {
+        actionMap.put("createMeasurement", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 boolean altPressed = (e.getModifiers() & ActionEvent.ALT_MASK) != 0;
                 boolean shiftPressed = (e.getModifiers() & ActionEvent.SHIFT_MASK) != 0;
                 boolean ctrlPressed = (e.getModifiers() & ActionEvent.CTRL_MASK) != 0;
-                System.out.println("Action performed: " + altPressed + " " + shiftPressed + " " + ctrlPressed);
                 updateForm(altPressed, shiftPressed, ctrlPressed);
             }
         });
@@ -58,6 +58,11 @@ public class MeasuringToolsComponent implements RenderingComponent {
             public void mouseMoved(MouseEvent e) {
                 if (currentForm == null)
                     return;
+
+                if(!e.isAltDown()) {
+                    currentForm = null;
+                    return;
+                }
 
                 // endPoint =
                 // renderer.getTranslationhandler().getWorldCoordinateFormUISpace(e.getPoint());
@@ -113,13 +118,11 @@ public class MeasuringToolsComponent implements RenderingComponent {
         if (currentForm == null) {
             Point mousePosition = MouseInfo.getPointerInfo().getLocation();
             SwingUtilities.convertPointFromScreen(mousePosition, renderer.getRenderingComponent());
-            System.out.println("Mouse position: " + mousePosition);
             startPoint = renderer.getTranslationhandler().getWorldCoordinateFormUISpace(mousePosition);
             endPoint = renderer.getTranslationhandler().getWorldCoordinateFormUISpace(mousePosition);
         }
 
         currentForm = newForm;
-        System.out.println("Switched to form: " + currentForm);
 
     }
 
@@ -175,7 +178,12 @@ public class MeasuringToolsComponent implements RenderingComponent {
         g.drawLine(startPoint.x, startPoint.y, endPoint2.x, endPoint2.y);
 
         // Draw the smaller line between the two endpoints
-        float[] dashPattern = { 10, 10 };
+        float distanceBetweenEndPoints = (float) endPoint1.distance(endPoint2);
+        // By multiplying the distance by 1.1 the dotted line wont end with an empty
+        // line
+        distanceBetweenEndPoints *= 1.11;
+        float[] dashPattern = { Math.max(0.1f * distanceBetweenEndPoints, 10),
+                Math.max(0.1f * distanceBetweenEndPoints, 10) };
         g.setStroke(new BasicStroke((float) (2 / renderer.getTranslationhandler().getScale()), BasicStroke.CAP_BUTT,
                 BasicStroke.JOIN_MITER, 10, dashPattern, 0));
         g.drawLine(endPoint1.x, endPoint1.y, endPoint2.x, endPoint2.y);
@@ -195,10 +203,13 @@ public class MeasuringToolsComponent implements RenderingComponent {
     }
 
     private void drawDistanceText(Graphics2D g) {
+        double distance = startPoint.distance(endPoint);
+        if ((int) startPoint.distance(endPoint) <= 0)
+            return;
+
         g.setColor(Color.BLACK);
         g.setFont(g.getFont().deriveFont(Font.BOLD, (float) (16 / renderer.getTranslationhandler().getScale())));
 
-        double distance = startPoint.distance(endPoint);
         String distanceText = "" + ((int) distance);
 
         int textX = (startPoint.x + endPoint.x) / 2;

@@ -18,12 +18,8 @@ public class GridComponent implements RenderingComponent, WorldGrid {
     double gridOffsetY = 0;
     boolean isGridEnabled = false;
 
-    private Renderer renderer;
-
     @Override
     public void setRenderer(Renderer renderer) {
-        this.renderer = renderer;
-
         var GRID_ENABLED = App.getInstance().getToolbarAttributes().VIEW_GRID_ENABLED;
         GRID_ENABLED.addObserver(val -> {
             this.isGridEnabled = val;
