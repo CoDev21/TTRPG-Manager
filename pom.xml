@@ -14,7 +14,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.release>21</maven.compiler.release>
+    <maven.compiler.release>17</maven.compiler.release>
   </properties>
 
   <dependencies>
@@ -60,6 +60,9 @@
               <mainClass>de.omegasystems.App</mainClass>
             </manifest>
           </archive>
+          <!-- <includes>
+            <include>**/ressources/*</include>
+          </includes> -->
         </configuration>
         <version>3.0.2</version>
       </plugin>

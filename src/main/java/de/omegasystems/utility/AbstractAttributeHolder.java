@@ -1,10 +1,6 @@
-package de.omegasystems.dataobjects;
+package de.omegasystems.utility;
 
 import java.util.Objects;
-
-import de.omegasystems.utility.Observable;
-import de.omegasystems.utility.Observer;
-import de.omegasystems.utility.Observerhandler;
 
 public abstract class AbstractAttributeHolder {
 
@@ -12,8 +8,15 @@ public abstract class AbstractAttributeHolder {
         private Observerhandler<T> handler = new Observerhandler<>();
         private T val;
 
-        protected Property(T defaultVal) {
+        public Property(T defaultVal) {
             this.val = defaultVal;
+        }
+
+        public Property(Observable<?> parent, T defaultVal) {
+            this(defaultVal);
+            if (parent == null)
+                return;
+            handler.addObserver(val -> parent.notifyObservers(null));
         }
 
         public void setValue(T newVal) {
@@ -49,7 +52,7 @@ public abstract class AbstractAttributeHolder {
 
         private Property<Boolean> canTriggerAction = new Property<>(true);
 
-        protected Action() {
+        public Action() {
         }
 
         public Property<Boolean> canTriggerAction() {
@@ -77,4 +80,5 @@ public abstract class AbstractAttributeHolder {
         }
 
     }
+
 }

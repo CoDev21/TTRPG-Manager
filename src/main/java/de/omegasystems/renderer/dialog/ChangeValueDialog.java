@@ -1,23 +1,25 @@
-package de.omegasystems.components.dialog;
+package de.omegasystems.renderer.dialog;
 
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
+import javax.swing.JColorChooser;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import de.omegasystems.dataobjects.AbstractAttributeHolder;
+import de.omegasystems.utility.AbstractAttributeHolder;
 
 public abstract class ChangeValueDialog<T> extends JDialog {
 
     public ChangeValueDialog(JFrame parent, AbstractAttributeHolder.Property<T> toChange) {
         super(parent);
         setTitle("Enter a new Value:");
-        final JTextField textField = new JTextField(""+toChange.getValue(), 16);
+        final JTextField textField = new JTextField("" + toChange.getValue(), 16);
         JPanel north = new JPanel();
         north.add(textField);
         JButton send = new JButton("send text");
@@ -109,4 +111,12 @@ public abstract class ChangeValueDialog<T> extends JDialog {
         }
 
     }
+
+    public static void createColorDialog(JFrame parent, AbstractAttributeHolder.Property<Color> toChange) {
+        Color newColor = JColorChooser.showDialog(null, "Choose a new color",
+                toChange.getValue() != null ? toChange.getValue() : Color.WHITE);
+        if (newColor != null)
+            toChange.setValue(newColor);
+    }
+
 }
