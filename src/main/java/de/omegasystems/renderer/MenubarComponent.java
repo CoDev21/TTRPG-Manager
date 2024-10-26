@@ -43,6 +43,7 @@ public class MenubarComponent extends JMenuBar {
 
         var VIEW = new JMenu("View");
         VIEW.add(GRID_SUBMENU);
+        VIEW.add(createCheckbox("Smooth Scrolling", null, dataHolder.VIEW_ANIMATION_SMOOTH_SCROLLING_ENABLED));
 
         add(MAP);
         add(TOKEN);

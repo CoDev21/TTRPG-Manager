@@ -11,6 +11,7 @@ import java.awt.geom.Point2D;
 
 import javax.swing.Timer;
 
+import de.omegasystems.App;
 import de.omegasystems.core.Renderer;
 import de.omegasystems.core.WorldTranslationHandler;
 
@@ -28,8 +29,16 @@ public class TranslationHandler implements WorldTranslationHandler {
     public double scrollSensitivity = 10.0;
     public double zoomSensitivity = 1.3;
 
+    // Animation control variable
+    private boolean enableAnimations = true;
+
     public TranslationHandler(Renderer renderer) {
         this.renderer = renderer;
+
+        App.getInstance().getToolbarAttributes().VIEW_ANIMATION_SMOOTH_SCROLLING_ENABLED.addObserver(arg -> {
+            enableAnimations = arg;
+        });
+        enableAnimations = App.getInstance().getToolbarAttributes().VIEW_ANIMATION_SMOOTH_SCROLLING_ENABLED.getValue();
 
         renderer.addMouseWheelListener(new MouseWheelListener() {
             public void mouseWheelMoved(final MouseWheelEvent e) {
@@ -49,6 +58,12 @@ public class TranslationHandler implements WorldTranslationHandler {
                     targetOffset.y = cursor.getY() - cursorY * targetScale;
 
                     clampOffsets();
+
+                    if (!enableAnimations) {
+                        scale = targetScale;
+                        offset.setLocation(targetOffset);
+                        renderer.scheduleRedraw();
+                    }
                     return;
                 }
                 int scroll = -e.getUnitsToScroll();
@@ -60,6 +75,11 @@ public class TranslationHandler implements WorldTranslationHandler {
                     targetOffset.y += scroll * scrollSensitivity;
                 }
                 clampOffsets();
+
+                if (!enableAnimations) {
+                    offset.setLocation(targetOffset);
+                    renderer.scheduleRedraw();
+                }
             }
         });
 
@@ -89,6 +109,11 @@ public class TranslationHandler implements WorldTranslationHandler {
                     targetOffset.y += (currentPoint.getY() - lastDragPoint.getY());
                     lastDragPoint = currentPoint;
                     clampOffsets();
+
+                    if (!enableAnimations) {
+                        offset.setLocation(targetOffset);
+                        renderer.scheduleRedraw();
+                    }
                 }
             }
         });
@@ -106,10 +131,16 @@ public class TranslationHandler implements WorldTranslationHandler {
     }
 
     public void update() {
-        // Interpolate scale and offsets
-        scale = lerp(scale, targetScale, 0.1);
-        offset.x = lerp(offset.x, targetOffset.x, 0.1);
-        offset.y = lerp(offset.y, targetOffset.y, 0.1);
+        if (enableAnimations) {
+            // Interpolate scale and offsets
+            scale = lerp(scale, targetScale, 0.1);
+            offset.x = lerp(offset.x, targetOffset.x, 0.1);
+            offset.y = lerp(offset.y, targetOffset.y, 0.1);
+        } else {
+            // Apply target values directly
+            scale = targetScale;
+            offset.setLocation(targetOffset);
+        }
         renderer.scheduleRedraw();
     }
 

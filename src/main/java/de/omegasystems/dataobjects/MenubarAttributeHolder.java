@@ -16,6 +16,7 @@ public class MenubarAttributeHolder extends AbstractAttributeHolder {
     public Property<Double> TOKEN_SIZE = new Property<>(64.0);
     public Property<Double> TOKEN_OUTLINE_THICKNESS = new Property<>(4.0);
 
+    public Property<Boolean> VIEW_ANIMATION_SMOOTH_SCROLLING_ENABLED = new Property<>(true);
     public Property<Boolean> VIEW_GRID_ENABLED = new Property<>(false);
     public Property<Double> VIEW_GRID_THICKNESS = new Property<>(2.0);
     public Property<Double> VIEW_GRID_SCALE = new Property<>(64.0);
