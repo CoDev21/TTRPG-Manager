@@ -16,7 +16,7 @@ TTRPG Manager is an application written in Java using Maven for building and Swi
 
 1. Clone the repository:
     ```sh
-    git clone <repository-url>
+    git clone [<repository-url>](https://github.com/CoDev21/TTRPG-Manager.git)
     ```
 2. Navigate to the project directory:
     ```sh
