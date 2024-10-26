@@ -20,6 +20,7 @@ import de.omegasystems.dataobjects.MenubarAttributeHolder;
 import de.omegasystems.renderer.MainRenderer;
 import de.omegasystems.renderer.MenubarComponent;
 import de.omegasystems.renderer.components.DebugOverlayComponent;
+import de.omegasystems.renderer.components.DragHandlingComponent;
 import de.omegasystems.renderer.components.GridComponent;
 import de.omegasystems.renderer.components.ImageComponent;
 import de.omegasystems.renderer.components.TokenRendererComponent;
@@ -97,6 +98,8 @@ public class App {
         tokenHandler.registerUIBindings();
 
         renderer.addWorldRenderComponent(new TokenTooltipComponent(tokenHandler));
+
+        renderer.addUIRenderComponent(new DragHandlingComponent());
 
         if (isDevEnv())
             renderer.addUIRenderComponent(new DebugOverlayComponent());

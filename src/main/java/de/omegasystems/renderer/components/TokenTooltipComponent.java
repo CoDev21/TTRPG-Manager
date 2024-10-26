@@ -49,7 +49,6 @@ public class TokenTooltipComponent extends MouseAdapter implements RenderingComp
     @Override
     public void setRenderer(Renderer renderer) {
         this.renderer = renderer;
-        renderer.addUIRenderComponent(this);
         renderer.addMouseListener(this);
         renderer.addMouseMotionListener(this);
     }

@@ -82,5 +82,9 @@ public class GridComponent implements RenderingComponent, WorldGrid {
         int cellY = (int) ((pos.y - gridOffsetY) / gridScale) * (int) gridScale + (int) gridOffsetY;
         return new Point(cellX, cellY);
     }
-}
 
+    @Override
+    public double getCellSize() {
+        return gridScale;
+    }
+}

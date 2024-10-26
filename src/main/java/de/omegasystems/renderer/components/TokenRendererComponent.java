@@ -35,8 +35,12 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
     private double highlightThickness = 1.0;
     private double tokenScale = 64.0;
 
+    private boolean isSelectionBoxActive = false;
+    private Point selectionBoxStart = new Point();
+    private Point selectionBoxEnd = new Point();
+
     private Token draggedToken;
-    private Token highlightedToken;
+    private List<Token> highlightedTokens = new ArrayList<>();
     private Point dragOffset;
 
     private Renderer renderer;
@@ -91,7 +95,7 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
             g.drawImage(token.getImage(), posX, posY, scaledImageSize, scaledImageSize, null);
 
             g.setStroke(new BasicStroke((float) (highlightThickness)));
-            g.setColor(token.equals(highlightedToken) ? token.getFriendStatus().getHighlight()
+            g.setColor(highlightedTokens.contains(token) ? token.getFriendStatus().getHighlight()
                     : token.getFriendStatus().getOutline());
 
             int outlineOffset = (int) (highlightThickness / 2);
@@ -113,13 +117,27 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
 
         }
 
+        if (!isSelectionBoxActive)
+            return;
+
+        g.setColor(Color.BLACK);
+        g.setStroke(new BasicStroke((int) (1 / renderer.getTranslationhandler().getScale())));
+
+        int x = Math.min(selectionBoxStart.x, selectionBoxEnd.x);
+        int y = Math.min(selectionBoxStart.y, selectionBoxEnd.y);
+        int width = Math.abs(selectionBoxEnd.x - selectionBoxStart.x);
+        int height = Math.abs(selectionBoxEnd.y - selectionBoxStart.y);
+        g.drawRect(x, y, width, height);
     }
 
     // Token dragging
     @Override
     public void mouseDragged(MouseEvent e) {
-        if (draggedToken == null)
+        if (draggedToken == null) {
+            selectionBoxEnd = renderer.getTranslationhandler().getWorldCoordinateFormUISpace(e.getPoint());
+            isSelectionBoxActive = true;
             return;
+        }
 
         var clickedWorldPos = renderer.getTranslationhandler().getWorldCoordinateFormUISpace(e.getPoint());
         var translatedOffset = (Point) clickedWorldPos.clone();
@@ -127,7 +145,12 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
 
         var worldGrid = renderer.getComponentImplementing(WorldGrid.class);
         if (e.isControlDown() && worldGrid != null) {
-            translatedOffset = worldGrid.getContainingCellOrigin(clickedWorldPos);
+            Point cellOrigin = worldGrid.getContainingCellOrigin(clickedWorldPos);
+            double cellSize = worldGrid.getCellSize();
+            translatedOffset = new Point(
+                (int) (cellOrigin.x + (cellSize - calculateImageSizeFor(draggedToken)) / 2),
+                (int) (cellOrigin.y + (cellSize - calculateImageSizeFor(draggedToken)) / 2)
+            );
         }
 
         var tokenSize = calculateImageSizeFor(draggedToken);
@@ -142,19 +165,23 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        if (e.getClickCount() == 2 && highlightedToken != null)
-            new TokenDialog(renderer.getFrame(), highlightedToken);
+        if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() != 2)
+            return;
+
+        Token clickedToken = getTokenFromPosition(e);
+        if (clickedToken != null)
+            new TokenDialog(renderer.getFrame(), clickedToken);
     }
 
     @Override
     public void mousePressed(MouseEvent e) {
-        Token token = getTokenFromPosition(e);
-
         if (e.getButton() != MouseEvent.BUTTON1)
             return;
 
+        Token token = getTokenFromPosition(e);
         if (token == null) {
-            highlightedToken = null;
+            highlightedTokens.clear();
+            selectionBoxStart = renderer.getTranslationhandler().getWorldCoordinateFormUISpace(e.getPoint());
             notifyChange();
             return;
         }
@@ -164,8 +191,14 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
         int posY = (int) (tokenPos.y);
 
         var clickedPos = renderer.getTranslationhandler().getWorldCoordinateFormUISpace(e.getPoint());
+
+        // Support multiple selections with control
+        if (!e.isControlDown()) {
+            highlightedTokens.clear();
+        }
+        highlightedTokens.add(token);
+
         draggedToken = token;
-        highlightedToken = token;
         dragOffset = new Point((int) (posX - clickedPos.getX()), (int) (posY - clickedPos.getY()));
 
         // Re-add the token to the list at the back so that it gets drawn last (above
@@ -177,7 +210,42 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
 
     @Override
     public void mouseReleased(MouseEvent e) {
+        if (e.getButton() != MouseEvent.BUTTON1) {
+            return;
+        }
+
         draggedToken = null;
+
+        if (!isSelectionBoxActive)
+            return;
+
+        Rectangle selectionBox = new Rectangle(
+                Math.min(selectionBoxStart.x, selectionBoxEnd.x),
+                Math.min(selectionBoxStart.y, selectionBoxEnd.y),
+                Math.abs(selectionBoxEnd.x - selectionBoxStart.x),
+                Math.abs(selectionBoxEnd.y - selectionBoxStart.y));
+
+        List<Token> tokensInSelectionBox = getTokensInArea(selectionBox);
+        highlightedTokens.clear();
+        for (Token token : tokensInSelectionBox) {
+            highlightedTokens.add(token);
+        }
+        isSelectionBoxActive = false;
+
+    }
+
+    @Override
+    public List<Token> getTokensInArea(Rectangle selectionBox) {
+        List<Token> tokensInSelectionBox = new ArrayList<>();
+        for (Token token : tokens) {
+            var tokenPos = token.getPosition();
+            int tokenSize = calculateImageSizeFor(token);
+
+            if (new Rectangle((int) tokenPos.x, (int) tokenPos.y, tokenSize, tokenSize)
+                    .intersects(selectionBox))
+                tokensInSelectionBox.add(token);
+        }
+        return tokensInSelectionBox;
     }
 
     @Override
@@ -207,10 +275,10 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
             return;
         }
 
-        if (highlightedToken != null) {
-            removeToken(highlightedToken);
-            highlightedToken = null;
+        for (Token token : new ArrayList<>(highlightedTokens)) {
+            removeToken(token);
         }
+
     }
 
     @Override
@@ -242,12 +310,11 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
             return;
         if (!tokens.remove(t))
             return;
-        if (t.equals(highlightedToken))
-            highlightedToken = null;
+
         if (t.equals(draggedToken))
             draggedToken = null;
-        if (t.equals(highlightedToken))
-            highlightedToken = null;
+        highlightedTokens.remove(t);
+
         notifyChange();
     }
 

@@ -13,4 +13,6 @@ public interface WorldGrid {
      */
     public Point getContainingCellOrigin(Point pos);
 
+    public double getCellSize();
+
 }

@@ -8,6 +8,7 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelListener;
 
 import javax.swing.JFrame;
+import javax.swing.TransferHandler;
 
 public interface Renderer {
 
@@ -39,7 +40,7 @@ public interface Renderer {
     public void addKeyListener(KeyListener l);
 
     public void addMouseMotionListener(MouseMotionListener l);
-    
+
     public void addMouseWheelListener(MouseWheelListener l);
 
     public void addComponentListener(ComponentListener l);
@@ -49,10 +50,13 @@ public interface Renderer {
     public JFrame getFrame();
 
     public Dimension getDrawingDimensions();
+
     public Dimension getScreenSize();
 
     public WorldTranslationHandler getTranslationhandler();
 
     public <T> T getComponentImplementing(Class<T> interfaceClass);
+
+    public void setTransferHandler(TransferHandler handler);
 
 }
