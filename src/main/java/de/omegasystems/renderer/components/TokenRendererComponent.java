@@ -35,6 +35,7 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
     private double highlightThickness = 1.0;
     private double tokenScale = 64.0;
 
+    private boolean selectionBoxCanBeActivated = false;
     private boolean isSelectionBoxActive = false;
     private Point selectionBoxStart = new Point();
     private Point selectionBoxEnd = new Point();
@@ -133,14 +134,14 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
     // Token dragging
     @Override
     public void mouseDragged(MouseEvent e) {
-        if (e.getButton() != MouseEvent.BUTTON1)
-            return;
 
-        if (draggedToken == null) {
+        if (draggedToken == null && selectionBoxCanBeActivated) {
             selectionBoxEnd = renderer.getTranslationhandler().getWorldCoordinateFormUISpace(e.getPoint());
             isSelectionBoxActive = true;
-            return;
         }
+
+        if (draggedToken == null)
+            return;
 
         var clickedWorldPos = renderer.getTranslationhandler().getWorldCoordinateFormUISpace(e.getPoint());
         var translatedOffset = (Point) clickedWorldPos.clone();
@@ -177,8 +178,12 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
 
     @Override
     public void mousePressed(MouseEvent e) {
-        if (e.getButton() != MouseEvent.BUTTON1)
+        if (e.getButton() != MouseEvent.BUTTON1) {
+            selectionBoxCanBeActivated = false;
             return;
+        }
+
+        selectionBoxCanBeActivated = true;
 
         Token token = getTokenFromPosition(e);
         if (token == null) {
