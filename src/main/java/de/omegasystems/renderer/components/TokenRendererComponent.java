@@ -133,6 +133,9 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
     // Token dragging
     @Override
     public void mouseDragged(MouseEvent e) {
+        if (e.getButton() != MouseEvent.BUTTON1)
+            return;
+
         if (draggedToken == null) {
             selectionBoxEnd = renderer.getTranslationhandler().getWorldCoordinateFormUISpace(e.getPoint());
             isSelectionBoxActive = true;
@@ -148,9 +151,8 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
             Point cellOrigin = worldGrid.getContainingCellOrigin(clickedWorldPos);
             double cellSize = worldGrid.getCellSize();
             translatedOffset = new Point(
-                (int) (cellOrigin.x + (cellSize - calculateImageSizeFor(draggedToken)) / 2),
-                (int) (cellOrigin.y + (cellSize - calculateImageSizeFor(draggedToken)) / 2)
-            );
+                    (int) (cellOrigin.x + (cellSize - calculateImageSizeFor(draggedToken)) / 2),
+                    (int) (cellOrigin.y + (cellSize - calculateImageSizeFor(draggedToken)) / 2));
         }
 
         var tokenSize = calculateImageSizeFor(draggedToken);
