@@ -38,4 +38,4 @@ TTRPG Manager is an application written in Java using Maven for building and Swi
 
 ## Contributing
 
-Contributions are welcome! For development create merge requests to the dev branch
+Contributions are welcome! Please contact me for ideas or directly create a merge request
