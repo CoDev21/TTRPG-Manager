@@ -2,6 +2,10 @@
 
 TTRPG Manager is an application written in Java using Maven for building and Swing for the GUI. It is designed to visualize scenes in tabletop RPGs, allowing tokens (player avatars or enemies) to be placed on a background image and moved around.
 
+![grafik](https://github.com/user-attachments/assets/22153a22-6ec9-4c93-a3a5-cd41b7165837)
+![grafik](https://github.com/user-attachments/assets/f5734aa7-3abb-413f-95d2-bed2363b4377)
+
+
 ## Features
 
 - Visualize scenes in tabletop RPGs
