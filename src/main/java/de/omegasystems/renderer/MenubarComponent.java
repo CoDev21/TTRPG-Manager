@@ -56,7 +56,6 @@ public class MenubarComponent extends JMenuBar {
 
         if (coupledValue != null) {
             item.setSelected(coupledValue.getValue());
-            // item.set(coupledValue.getValue());
             item.setAction(new AbstractAction(name, icon) {
                 @Override
                 public void actionPerformed(ActionEvent e) {

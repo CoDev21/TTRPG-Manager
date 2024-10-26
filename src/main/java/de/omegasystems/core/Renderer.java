@@ -7,6 +7,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelListener;
 
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.TransferHandler;
 
@@ -58,5 +59,7 @@ public interface Renderer {
     public <T> T getComponentImplementing(Class<T> interfaceClass);
 
     public void setTransferHandler(TransferHandler handler);
+
+    public JComponent getRenderingComponent();
 
 }

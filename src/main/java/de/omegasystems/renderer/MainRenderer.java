@@ -8,6 +8,7 @@ import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.SwingUtilities;
@@ -138,7 +139,14 @@ public class MainRenderer extends JLabel implements Observer<WorldTranslationHan
         });
     }
 
+    @Override
+    public JComponent getRenderingComponent() {
+        return this;
+    }
+
     public <T> T getComponentImplementing(Class<T> interfaceClass) {
+        if (interfaceClass.isInstance(this))
+            return interfaceClass.cast(this);
         for (RenderingComponent component : worldComponents) {
             if (interfaceClass.isInstance(component)) {
                 return interfaceClass.cast(component);

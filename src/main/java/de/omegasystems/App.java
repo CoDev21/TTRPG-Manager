@@ -20,9 +20,10 @@ import de.omegasystems.dataobjects.MenubarAttributeHolder;
 import de.omegasystems.renderer.MainRenderer;
 import de.omegasystems.renderer.MenubarComponent;
 import de.omegasystems.renderer.components.DebugOverlayComponent;
-import de.omegasystems.renderer.components.DragHandlingComponent;
+import de.omegasystems.renderer.components.DragImageInputHandlingComponent;
 import de.omegasystems.renderer.components.GridComponent;
 import de.omegasystems.renderer.components.ImageComponent;
+import de.omegasystems.renderer.components.MeasuringToolsComponent;
 import de.omegasystems.renderer.components.TokenRendererComponent;
 import de.omegasystems.renderer.components.TokenTooltipComponent;
 import de.omegasystems.renderer.dialog.ChangeValueDialog;
@@ -98,8 +99,9 @@ public class App {
         tokenHandler.registerUIBindings();
 
         renderer.addWorldRenderComponent(new TokenTooltipComponent(tokenHandler));
+        renderer.addWorldRenderComponent(new MeasuringToolsComponent());
 
-        renderer.addUIRenderComponent(new DragHandlingComponent());
+        renderer.addUIRenderComponent(new DragImageInputHandlingComponent());
 
         if (isDevEnv())
             renderer.addUIRenderComponent(new DebugOverlayComponent());

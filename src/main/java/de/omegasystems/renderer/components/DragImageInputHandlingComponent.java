@@ -18,7 +18,7 @@ import de.omegasystems.core.Token;
 import de.omegasystems.core.TokenHandler;
 import de.omegasystems.dataobjects.TokenData;
 
-public class DragHandlingComponent implements RenderingComponent {
+public class DragImageInputHandlingComponent implements RenderingComponent {
 
     @Override
     public void draw(Graphics2D g, Dimension size) {
