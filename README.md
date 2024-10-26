@@ -22,7 +22,7 @@ TTRPG Manager is an application written in Java using Maven for building and Swi
     ```sh
     cd TTRPG-Manager
     ```
-3. Build the project using Maven (Needs Java 17:
+3. Build the project using Maven (Needs Java 17):
     ```sh
     mvn clean install
     ```
