@@ -55,7 +55,8 @@ public class MenubarComponent extends JMenuBar {
         JCheckBoxMenuItem item = new JCheckBoxMenuItem(name, icon);
 
         if (coupledValue != null) {
-            item.setEnabled(coupledValue.getValue());
+            item.setSelected(coupledValue.getValue());
+            // item.set(coupledValue.getValue());
             item.setAction(new AbstractAction(name, icon) {
                 @Override
                 public void actionPerformed(ActionEvent e) {

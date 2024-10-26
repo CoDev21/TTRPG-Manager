@@ -99,7 +99,7 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
             g.setColor(highlightedTokens.contains(token) ? token.getFriendStatus().getHighlight()
                     : token.getFriendStatus().getOutline());
 
-            int outlineOffset = (int) (highlightThickness / 2);
+            int outlineOffset = (int) (highlightThickness / 4);
 
             g.drawRect(posX - outlineOffset, posY - outlineOffset, scaledImageSize + outlineOffset * 2,
                     scaledImageSize + outlineOffset * 2);
