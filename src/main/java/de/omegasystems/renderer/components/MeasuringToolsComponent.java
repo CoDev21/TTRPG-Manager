@@ -25,7 +25,6 @@ import de.omegasystems.core.RenderingComponent;
 public class MeasuringToolsComponent implements RenderingComponent {
 
     private Renderer renderer;
-
     private MeasurmentForm currentForm = null;
 
     private Point startPoint = new Point();
@@ -58,11 +57,6 @@ public class MeasuringToolsComponent implements RenderingComponent {
             public void mouseMoved(MouseEvent e) {
                 if (currentForm == null)
                     return;
-
-                if(!e.isAltDown()) {
-                    currentForm = null;
-                    return;
-                }
 
                 // endPoint =
                 // renderer.getTranslationhandler().getWorldCoordinateFormUISpace(e.getPoint());
@@ -179,8 +173,7 @@ public class MeasuringToolsComponent implements RenderingComponent {
 
         // Draw the smaller line between the two endpoints
         float distanceBetweenEndPoints = (float) endPoint1.distance(endPoint2);
-        // By multiplying the distance by 1.1 the dotted line wont end with an empty
-        // line
+        // By multiplying the distance by 1.1 the dotted line wont end with an empty line
         distanceBetweenEndPoints *= 1.11;
         float[] dashPattern = { Math.max(0.1f * distanceBetweenEndPoints, 10),
                 Math.max(0.1f * distanceBetweenEndPoints, 10) };
