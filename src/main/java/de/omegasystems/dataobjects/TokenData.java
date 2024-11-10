@@ -11,7 +11,8 @@ public class TokenData implements Observable<TokenData> {
     private Property<File> pictureFile;
     private Property<String> name;
     private Property<String> description;
-    private Property<TokenSize> size;
+    private Property<TokenSize> sizeClass;
+    private Property<Double> size;
     private Property<Integer> initiative;
     private Property<String> movement;
     private Property<Friendlieness> friendStatus;
@@ -23,10 +24,18 @@ public class TokenData implements Observable<TokenData> {
         pictureFile = new Property<File>(this, null);
         name = new Property<String>(this, "Name...");
         description = new Property<String>(this, "Your Description");
-        size = new Property<TokenSize>(this, TokenSize.Medium);
         initiative = new Property<Integer>(this, 0);
         movement = new Property<String>(this, "Movement");
         friendStatus = new Property<Friendlieness>(this, Friendlieness.Neutral);
+
+        // We need to couple these to values so that the returned token only cares about
+        // its own size as a double, but the User can input a predifined input (the enum
+        // TokenSize) so that the tokens can have a uniform appeareance
+        sizeClass = new Property<TokenSize>(this, TokenSize.Medium);
+        size = new Property<Double>(this, TokenSize.Medium.getScale());
+
+        sizeClass.addObserver(newVal -> size.setValue(newVal.getScale()));
+        size.addObserver(newVal -> sizeClass.setValue(TokenSize.getClosesTokenSize(newVal)));
     }
 
     public Property<String> getDescription() {
@@ -53,7 +62,11 @@ public class TokenData implements Observable<TokenData> {
         return pictureFile;
     }
 
-    public Property<TokenSize> getSize() {
+    public Property<TokenSize> getSizeClass() {
+        return sizeClass;
+    }
+
+    public Property<Double> getSize() {
         return size;
     }
 

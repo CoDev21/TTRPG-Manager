@@ -1,14 +1,18 @@
 package de.omegasystems.renderer;
 
+import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
@@ -24,6 +28,7 @@ import javax.swing.JRadioButton;
 import javax.swing.JSlider;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
@@ -169,6 +174,54 @@ public abstract class ComponentBuilder {
         return item;
     }
 
+    public static JTextField createDoubleTextField(int coulums, AbstractAttributeHolder.Property<Double> coupledValue,
+            int decimals) {
+
+        JTextField item = new JTextField(String.format("%,." + decimals + "f", coupledValue.getValue()), coulums);
+        item.setEditable(true);
+        coupledValue
+                .addObserver(newVal -> SwingUtilities.invokeLater(
+                        () -> {
+                            if (!item.isFocusOwner())
+                                item.setText(String.format("%,." + decimals + "f", coupledValue.getValue()));
+                        }));
+        item.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                try {
+                    NumberFormat nf = NumberFormat.getNumberInstance();
+                    double val = nf.parse(item.getText()).doubleValue();
+                    coupledValue.setValue(val);
+                } catch (ParseException eg) {
+                }
+            }
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                try {
+                    NumberFormat nf = NumberFormat.getNumberInstance();
+                    double val = nf.parse(item.getText()).doubleValue();
+                    coupledValue.setValue(val);
+                } catch (ParseException eg) {
+                }
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                try {
+                    NumberFormat nf = NumberFormat.getNumberInstance();
+                    double val = nf.parse(item.getText()).doubleValue();
+                    coupledValue.setValue(val);
+                } catch (ParseException eg) {
+                }
+            }
+        });
+
+        // Hook up an observer to change the ui if an internal change occurs
+        // coupledValue.addObserver(newVal -> item.setText(newVal));
+        return item;
+    }
+
     public static JTextArea createEditorPane(AbstractAttributeHolder.Property<String> coupledValue) {
 
         JTextArea item = new JTextArea(coupledValue.getValue());
@@ -205,26 +258,23 @@ public abstract class ComponentBuilder {
     public static class ImagePathSelector extends JLabel {
 
         private Property<File> path;
+        private Image defaultImage;
+        private Dimension size;
         private static File lastPath = new File(System.getProperty("user.dir"));
 
         public ImagePathSelector(JFrame parent, Property<File> currentPath, Image defaultImage) {
             super(new ImageIcon(loadFileOrPlaceholderImage(currentPath.getValue(), defaultImage)));
 
             this.path = currentPath;
+            this.defaultImage = defaultImage;
 
             addMouseListener(new MouseListener() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
                     File newPath = requestImageFromUser(parent);
                     if (newPath != null) {
-                        currentPath.setValue(newPath);
-                        var img = loadFileOrPlaceholderImage(currentPath.getValue(), defaultImage);
-                        Image dimg = img.getScaledInstance(getWidth(), getHeight(),
-                                Image.SCALE_SMOOTH);
-                        setIcon(new ImageIcon(dimg));
-                        revalidate();
-                        if (getParent() != null)
-                            getParent().revalidate();
+                        path.setValue(newPath);
+                        reloadImage();
                     }
                 }
 
@@ -250,8 +300,31 @@ public abstract class ComponentBuilder {
             });
         }
 
+        /**
+         * Set the size for any image so that it does not change after changing the
+         * image. Set to null if you want this component to resize again (default
+         * behaviour)
+         * 
+         * @param d the new size images get scaled to, or null to disable resizing
+         */
+        public void setImageSize(Dimension d) {
+            this.size = d;
+            reloadImage();
+        }
+
         public Property<File> getPath() {
             return path;
+        }
+
+        private void reloadImage() {
+            var img = loadFileOrPlaceholderImage(path.getValue(), defaultImage);
+            if (size != null)
+                img = img.getScaledInstance((int) size.getWidth(), (int) size.getHeight(),
+                        Image.SCALE_SMOOTH);
+            setIcon(new ImageIcon(img));
+            revalidate();
+            if (getParent() != null)
+                getParent().revalidate();
         }
 
         private static Image loadFileOrPlaceholderImage(File filePath, Image backupImage) {

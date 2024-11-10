@@ -9,6 +9,21 @@ public enum TokenSize {
 
     ;
 
+    public static TokenSize getClosesTokenSize(double size) {
+        double closestDistance = Double.MAX_VALUE;
+        TokenSize ret = null;
+        for (TokenSize sizeClass : values()) {
+            double dist = Math.abs(sizeClass.getScale() - size);
+
+            if (dist >= closestDistance)
+                continue;
+
+            closestDistance = dist;
+            ret = sizeClass;
+        }
+        return ret;
+    }
+
     private double scale;
 
     TokenSize(double scale) {

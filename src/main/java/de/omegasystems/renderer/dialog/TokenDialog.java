@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.Label;
@@ -69,12 +70,14 @@ public class TokenDialog extends JDialog {
 
         var imageChooser = ComponentBuilder.createImagePathSelector(parent, data.getPictureFile(),
                 Token.getPlaceholderImage());
-        imageChooser.setMaximumSize(imageChooser.getMinimumSize());
+        imageChooser.setImageSize(
+                new Dimension(Token.getPlaceholderImage().getWidth(null), Token.getPlaceholderImage().getWidth(null)));
         var nameChooser = ComponentBuilder.createTextField(16, data.getName());
         // nameChooser.setPreferredSize(imageChooser.getMinimumSize());
 
         var friendlienessChooser = ComponentBuilder.createEnumRadioButtons(data.getFriendStatus(), Friendlieness.class);
-        var sizeChooser = ComponentBuilder.createEnumSlider("Size: ", data.getSize(), TokenSize.class);
+        var sizeClassChooser = ComponentBuilder.createEnumSlider("Size: ", data.getSizeClass(), TokenSize.class);
+        var manualSizeChooser = ComponentBuilder.createDoubleTextField(5, data.getSize(), 1);
         var movementEditor = ComponentBuilder.createTextField(12, data.getMovement());
 
         var sendButton = ComponentBuilder.createCallbackButton(token != null ? "Save Changes" : "Create Token", () -> {
@@ -89,14 +92,12 @@ public class TokenDialog extends JDialog {
         sendButton.setForeground(Color.RED);
         sendButton.setOpaque(false);
 
-        // sizeChooser.setHorizontalAlignment(JLabel.LEFT);
-        // friendlienessChooser.forEach(btn -> btn.setAlignmentX(LEFT_ALIGNMENT));
-
         topLeftPanel.add(imageChooser);
         topLeftPanel.add(Box.createVerticalStrut(10));
         topLeftPanel.add(nameChooser);
 
-        topRightPanel.add(sizeChooser);
+        topRightPanel.add(sizeClassChooser);
+        topRightPanel.add(manualSizeChooser);
         topRightPanel.add(new Label("Friendlieness:", Label.LEFT));
         friendlienessChooser.forEach(btn -> topRightPanel.add(btn));
         topRightPanel.add(Box.createVerticalStrut(20));

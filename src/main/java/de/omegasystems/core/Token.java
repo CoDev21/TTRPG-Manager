@@ -33,7 +33,7 @@ public class Token {
     private Image image;
     private String name = "";
     private String description = "";
-    private TokenSize size = TokenSize.Large;
+    private double size = TokenSize.Large.getScale();
     private Integer initiative = 0;
     private String movement = "0";
     private Friendlieness friendStatus = Friendlieness.Neutral;
@@ -116,7 +116,7 @@ public class Token {
         return pictureFile;
     }
 
-    public TokenSize getSize() {
+    public double getSize() {
         return size;
     }
 

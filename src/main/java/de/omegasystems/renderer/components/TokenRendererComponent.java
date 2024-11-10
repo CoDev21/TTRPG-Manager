@@ -219,7 +219,7 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
             tokens.remove(token);
             tokens.add(token);
         }
-        
+
         notifyChange();
     }
 
@@ -283,7 +283,7 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
     }
 
     public int calculateImageSizeFor(Token token) {
-        return (int) (tokenScale * token.getSize().getScale());
+        return (int) (tokenScale * token.getSize());
     }
 
     @Override
