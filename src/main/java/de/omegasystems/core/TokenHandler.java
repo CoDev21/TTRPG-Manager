@@ -8,6 +8,8 @@ import de.omegasystems.utility.Observable;
 
 public interface TokenHandler extends Observable<TokenHandler> {
 
+    public double getTokenScale();
+
     public void addToken(Token t);
 
     public List<Token> getAllTokens();

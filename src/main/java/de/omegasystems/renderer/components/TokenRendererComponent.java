@@ -90,8 +90,9 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
 
         for (Token token : tokens) {
 
-            int posX = (int) (token.getPosition().x);
-            int posY = (int) (token.getPosition().y);
+            var tokenPos = token.getTopLeftPosition();
+            int posX = (int) (tokenPos.x);
+            int posY = (int) (tokenPos.y);
 
             int scaledImageSize = calculateImageSizeFor(token);
             g.drawImage(token.getImage(), posX, posY, scaledImageSize, scaledImageSize, null);
@@ -164,7 +165,7 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
         translatedOffset.x = clamp(translatedOffset.x, 0, (int) (maxPos.getWidth() - tokenSize));
         translatedOffset.y = clamp(translatedOffset.y, 0, (int) (maxPos.getHeight() - tokenSize));
 
-        draggedToken.setPosition(new Point2D.Double(translatedOffset.x, translatedOffset.y));
+        draggedToken.setTopLeftPosition(new Point2D.Double(translatedOffset.x, translatedOffset.y));
     }
 
     @Override
@@ -194,7 +195,7 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
             return;
         }
 
-        var tokenPos = token.getPosition();
+        var tokenPos = token.getTopLeftPosition();
         int posX = (int) (tokenPos.x);
         int posY = (int) (tokenPos.y);
 
@@ -253,7 +254,7 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
     public List<Token> getTokensInArea(Rectangle selectionBox) {
         List<Token> tokensInSelectionBox = new ArrayList<>();
         for (Token token : tokens) {
-            var tokenPos = token.getPosition();
+            var tokenPos = token.getTopLeftPosition();
             int tokenSize = calculateImageSizeFor(token);
 
             if (new Rectangle((int) tokenPos.x, (int) tokenPos.y, tokenSize, tokenSize)
@@ -271,7 +272,7 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
         var tmpList = new ArrayList<>(tokens);
         Collections.reverse(tmpList);
         for (Token token : tmpList) {
-            var tokenPos = token.getPosition();
+            var tokenPos = token.getTopLeftPosition();
             // double scale = renderer.getScale();
             int tokenSize = calculateImageSizeFor(token);
 
@@ -296,6 +297,11 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
             removeToken(token);
         }
 
+    }
+
+    @Override
+    public double getTokenScale() {
+        return tokenScale;
     }
 
     @Override

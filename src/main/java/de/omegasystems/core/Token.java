@@ -46,6 +46,7 @@ public class Token {
         this.id = UUID.randomUUID();
         this.tokenHandler = tokenHandler;
         updateAllValues(tokenData);
+        setTopLeftPosition(new Point2D.Double(0.0, 0.0));
     }
 
     public void updateAllValues(TokenData tokenData) {
@@ -121,8 +122,24 @@ public class Token {
     }
 
     // A double indicating the position of the current token between 0 and mapsize
+    public Point2D.Double getTopLeftPosition() {
+        return new Point2D.Double(getPosition().x - getSize() * tokenHandler.getTokenScale() / 2.0,
+                getPosition().y - getSize() * tokenHandler.getTokenScale() / 2.0);
+    }
+
     public Point2D.Double getPosition() {
         return (Point2D.Double) position;
+    }
+
+    /**
+     * ame as setPoition(), but instead of referring to the center of the token
+     * (default), it sets the top left position of the token
+     * 
+     * @param pos
+     */
+    public void setTopLeftPosition(Point2D.Double pos) {
+        setPosition(new Point2D.Double(pos.x + getSize() * tokenHandler.getTokenScale() / 2,
+                pos.y + getSize() * tokenHandler.getTokenScale() / 2));
     }
 
     public void setPosition(Point2D.Double pos) {
