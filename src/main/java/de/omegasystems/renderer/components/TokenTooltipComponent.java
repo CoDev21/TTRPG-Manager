@@ -107,8 +107,9 @@ public class TokenTooltipComponent extends MouseAdapter implements RenderingComp
 
         // Now that we have the bounds of the Strings, we can check to wich side of the
         // Token we can draw it
-        int posX = (int) (hoveredToken.getPosition().x);
-        int posY = (int) (hoveredToken.getPosition().y);
+        var tokenPos = hoveredToken.getTopLeftPosition();
+        int posX = (int) (tokenPos.x);
+        int posY = (int) (tokenPos.y);
         int imageSize = tokenHandler.calculateImageSizeFor(hoveredToken);
 
         int drawingPosX = posX + imageSize + hTokenDistance;

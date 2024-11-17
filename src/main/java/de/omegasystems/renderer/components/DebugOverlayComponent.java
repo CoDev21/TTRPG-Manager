@@ -4,11 +4,16 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics2D;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import javax.swing.AbstractAction;
+import javax.swing.JComponent;
+import javax.swing.KeyStroke;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -26,18 +31,24 @@ public class DebugOverlayComponent implements RenderingComponent {
     private String projectVersion;
     private String projectName;
 
+    private boolean overlayEnabled = false;
+
     @Override
     public void draw(Graphics2D g, Dimension size) {
-        if (renderer != null) {
-            Dimension drawingDimensions = renderer.getDrawingDimensions();
-            Dimension screenSize = renderer.getScreenSize();
+        if (renderer == null)
+            return;
 
-            drawStrings(g,
-                    "Name: " + projectName + " (v" + projectVersion + ")",
-                    "Drawing Dimensions: " + drawingDimensions.width + "x" + drawingDimensions.height,
-                    "Screen Size: " + screenSize.width + "x" + screenSize.height);
+        if (!App.getInstance().isDevEnv() && !overlayEnabled)
+            return;
 
-        }
+        Dimension drawingDimensions = renderer.getDrawingDimensions();
+        Dimension screenSize = renderer.getScreenSize();
+
+        drawStrings(g,
+                "Name: " + projectName + " (v" + projectVersion + ")",
+                "Drawing Dimensions: " + drawingDimensions.width + "x" + drawingDimensions.height,
+                "Screen Size: " + screenSize.width + "x" + screenSize.height);
+
     }
 
     private void drawStrings(Graphics2D g, String... lines) {
@@ -53,7 +64,25 @@ public class DebugOverlayComponent implements RenderingComponent {
     public void setRenderer(Renderer renderer) {
         this.renderer = renderer;
 
+        var frame = renderer.getFrame();
+        var inputMap = frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        var actionMap = frame.getRootPane().getActionMap();
+
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F3, 0, false), "toggleDebugOverlay");
+
+        actionMap.put("toggleDebugOverlay", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                toggleOverlay();
+            }
+        });
+
         loadProperties();
+    }
+
+    public void toggleOverlay() {
+        overlayEnabled = !overlayEnabled;
+        renderer.scheduleRedraw();
     }
 
     private void loadProperties() {
@@ -94,7 +123,6 @@ public class DebugOverlayComponent implements RenderingComponent {
             // Get the data from the pom.xml
             projectName = getStringFromPom(document, "name");
             projectVersion = getStringFromPom(document, "version");
-
 
         } catch (Exception e) {
             throw new RuntimeException("Error reading pom.xml version", e);

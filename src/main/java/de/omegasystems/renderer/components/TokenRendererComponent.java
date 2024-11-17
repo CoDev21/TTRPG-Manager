@@ -22,30 +22,36 @@ import de.omegasystems.core.Renderer;
 import de.omegasystems.core.RenderingComponent;
 import de.omegasystems.core.Token;
 import de.omegasystems.core.TokenHandler;
+import de.omegasystems.core.TokenSelectionHandler;
 import de.omegasystems.core.WorldGrid;
 import de.omegasystems.renderer.dialog.ChangeValueDialog.DoubleDialog;
 import de.omegasystems.renderer.dialog.TokenDialog;
 import de.omegasystems.utility.Observer;
 import de.omegasystems.utility.Observerhandler;
 
-public class TokenRendererComponent extends MouseAdapter implements RenderingComponent, TokenHandler, KeyListener {
+public class TokenRendererComponent extends MouseAdapter
+        implements RenderingComponent, TokenHandler, TokenSelectionHandler, KeyListener {
+
+    private record TokenDragElement(Token token, Point offset) {
+    }
 
     private Observerhandler<TokenHandler> observerhandler = new Observerhandler<>();
+    private Renderer renderer;
 
-    private List<Token> tokens = new ArrayList<>();
     private double highlightThickness = 1.0;
     private double tokenScale = 64.0;
 
-    private boolean selectionBoxCanBeActivated = false;
-    private boolean isSelectionBoxActive = false;
+    private List<Token> tokens = new ArrayList<>();
+    private List<Token> highlightedTokens = new ArrayList<>();
+    private List<TokenDragElement> draggedTokens = new ArrayList<>();
+
     private Point selectionBoxStart = new Point();
     private Point selectionBoxEnd = new Point();
-
-    private Token draggedToken;
-    private List<Token> highlightedTokens = new ArrayList<>();
-    private Point dragOffset;
-
-    private Renderer renderer;
+    private Point originalDragPoint = new Point();
+    private boolean dragCanBeInitiated = false;
+    private boolean dragIsSelectionBox = false;
+    private boolean isSelectionBoxActive = false;
+    private boolean releaseShouldClearSelection = false;
 
     @Override
     public void setRenderer(Renderer renderer) {
@@ -124,7 +130,7 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
             return;
 
         g.setColor(Color.BLACK);
-        g.setStroke(new BasicStroke((int) (1 / renderer.getTranslationhandler().getScale())));
+        g.setStroke(new BasicStroke((int) (1.5 / renderer.getTranslationhandler().getScale())));
 
         int x = Math.min(selectionBoxStart.x, selectionBoxEnd.x);
         int y = Math.min(selectionBoxStart.y, selectionBoxEnd.y);
@@ -136,36 +142,68 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
     // Token dragging
     @Override
     public void mouseDragged(MouseEvent e) {
-
-        if (draggedToken == null && selectionBoxCanBeActivated) {
+        // This is called once for the first drag.
+        // The flag is set in the moude down event because there is no other way of
+        // getting the button and we only want the drag to happen on a left click
+        if (dragCanBeInitiated) {
+            dragCanBeInitiated = false;
+            // Initiate a selection box drawing instead of moving some tokens, if the
+            // selection box is empty
+            if (dragIsSelectionBox) {
+                isSelectionBoxActive = true;
+                if (!e.isControlDown())
+                    highlightedTokens.clear();
+            } else
+                initiateDragging();
+        }
+        if (isSelectionBoxActive) {
             selectionBoxEnd = renderer.getTranslationhandler().getWorldCoordinateFormUISpace(e.getPoint());
-            isSelectionBoxActive = true;
+            notifyChange();
+            return;
         }
 
-        if (draggedToken == null)
-            return;
+        // Update all values according to their
+        var worldGrid = renderer.getComponentImplementing(WorldGrid.class);
 
-        var clickedWorldPos = renderer.getTranslationhandler().getWorldCoordinateFormUISpace(e.getPoint());
+        var clickedWorldPos = renderer.getTranslationhandler()
+                .getWorldCoordinateFormUISpace(e.getPoint());
+        draggedTokens.forEach(tokenDrag ->
+
+        updateDraggedToken(e.isControlDown(), worldGrid, tokenDrag.token(), tokenDrag.offset(), clickedWorldPos));
+    }
+
+    private void updateDraggedToken(boolean isCtrl, WorldGrid worldGrid, Token draggedToken, Point dragOffset,
+            Point clickedWorldPos) {
         var translatedOffset = (Point) clickedWorldPos.clone();
         translatedOffset.translate(dragOffset.x, dragOffset.y);
 
-        var worldGrid = renderer.getComponentImplementing(WorldGrid.class);
-        if (e.isControlDown() && worldGrid != null) {
-            Point cellOrigin = worldGrid.getContainingCellOrigin(clickedWorldPos);
+        if (isCtrl && worldGrid != null) {
             double cellSize = worldGrid.getCellSize();
-            translatedOffset = new Point(
-                    (int) (cellOrigin.x + (cellSize - calculateImageSizeFor(draggedToken)) / 2),
-                    (int) (cellOrigin.y + (cellSize - calculateImageSizeFor(draggedToken)) / 2));
+            Point cellOrigin = worldGrid.getContainingCellOrigin(translatedOffset);
+            cellOrigin.translate((int) (cellSize / 2.0), (int) (cellSize / 2.0));
+            translatedOffset = cellOrigin;
         }
 
         var tokenSize = calculateImageSizeFor(draggedToken);
         var maxPos = renderer.getDrawingDimensions();
 
         // Clamp the pos so that plaer cannot be dragge doutside the visible playarea
-        translatedOffset.x = clamp(translatedOffset.x, 0, (int) (maxPos.getWidth() - tokenSize));
-        translatedOffset.y = clamp(translatedOffset.y, 0, (int) (maxPos.getHeight() - tokenSize));
+        translatedOffset.x = clamp(translatedOffset.x, tokenSize / 2, (int) (maxPos.getWidth() - tokenSize / 2));
+        translatedOffset.y = clamp(translatedOffset.y, tokenSize / 2, (int) (maxPos.getHeight() - tokenSize / 2));
 
-        draggedToken.setTopLeftPosition(new Point2D.Double(translatedOffset.x, translatedOffset.y));
+        draggedToken.setPosition(new Point2D.Double(translatedOffset.x, translatedOffset.y));
+    }
+
+    private void initiateDragging() {
+        // Add all highlighted tokens to the dragged list and calculate their offset to
+        // the current mouse position
+        draggedTokens.clear();
+        highlightedTokens.forEach(token -> {
+            var tokenPos = token.getPosition();
+            var dragOffset = new Point((int) (tokenPos.x - originalDragPoint.getX()),
+                    (int) (tokenPos.y - originalDragPoint.getY()));
+            draggedTokens.add(new TokenDragElement(token, dragOffset));
+        });
     }
 
     @Override
@@ -180,48 +218,48 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
 
     @Override
     public void mousePressed(MouseEvent e) {
+        // Here we need to tell the drag handler that the last press was a left click or
+        // not. Needed because it cannot be determined inside the drag event and we only
+        // want dragging to occur for left click not right or middle
         if (e.getButton() != MouseEvent.BUTTON1) {
-            selectionBoxCanBeActivated = false;
+            dragCanBeInitiated = false;
             return;
-        }
-
-        selectionBoxCanBeActivated = true;
+        } else
+            dragCanBeInitiated = true;
+        originalDragPoint = renderer.getTranslationhandler().getWorldCoordinateFormUISpace(e.getPoint());
 
         Token token = getTokenFromPosition(e);
         if (token == null) {
-            highlightedTokens.clear();
+            dragIsSelectionBox = true;
+            releaseShouldClearSelection = true;
             selectionBoxStart = renderer.getTranslationhandler().getWorldCoordinateFormUISpace(e.getPoint());
             notifyChange();
             return;
         }
+        dragIsSelectionBox = false;
 
-        var tokenPos = token.getTopLeftPosition();
-        int posX = (int) (tokenPos.x);
-        int posY = (int) (tokenPos.y);
+        // Windows Explorer behaviour, whhen an item is clicked on:
+        // If ctrl is pressed, The item selection is toggled
+        // If ctrl is not pressed:
+        // If the item is in the active selection, do nothing (the clearing is done on
+        // mouse release => we need to set a flag for this)
+        // If the item is not: Clear the selection and set the item as the only
+        // highligted one
 
-        var clickedPos = renderer.getTranslationhandler().getWorldCoordinateFormUISpace(e.getPoint());
+        releaseShouldClearSelection = false;
 
-        // Support multiple selections with control
-        if (!e.isControlDown()) {
+        if (e.isControlDown()) {
+            if (highlightedTokens.contains(token))
+                highlightedTokens.remove(token);
+            else
+                highlightedTokens.add(token);
+        } else if (!highlightedTokens.contains(token)) {
             highlightedTokens.clear();
-        }
-
-        if (highlightedTokens.contains(token))
-            highlightedTokens.remove(token);
-        else
             highlightedTokens.add(token);
-
-        draggedToken = token;
-        dragOffset = new Point((int) (posX - clickedPos.getX()), (int) (posY - clickedPos.getY()));
-
-        if (!e.isControlDown()) {
-            // Re-add the token to the list at the back so that it gets drawn last (above
-            // all the other Tokens)
-            tokens.remove(token);
-            tokens.add(token);
-        }
-
+        } else
+            releaseShouldClearSelection = true;
         notifyChange();
+
     }
 
     @Override
@@ -230,7 +268,17 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
             return;
         }
 
-        draggedToken = null;
+        // This is part of the windows explorer selection behaviour:
+        // When clicking on a selected item without starting to drag (dragCanBeInitiated
+        // is true), the selection is cleared and the item under the cursor is selected
+        // (if there is one)
+        if (dragCanBeInitiated && releaseShouldClearSelection) {
+            highlightedTokens.clear();
+            Token t = getTokenFromPosition(e);
+            if (t != null)
+                highlightedTokens.add(t);
+            return;
+        }
 
         if (!isSelectionBoxActive)
             return;
@@ -242,12 +290,26 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
                 Math.abs(selectionBoxEnd.y - selectionBoxStart.y));
 
         List<Token> tokensInSelectionBox = getTokensInArea(selectionBox);
-        highlightedTokens.clear();
-        for (Token token : tokensInSelectionBox) {
-            highlightedTokens.add(token);
-        }
-        isSelectionBoxActive = false;
 
+        // The selection box behaviour copied from windows:
+        // Without Ctrl pressed, it just adds the items to the selction
+        // If ctrl is pressed, the selection tool inverts any selection under it,
+        // meaning that not selected
+        // tokens get highlighted (wich is what you would expect from the selection),
+        // but when there are already selected items in the area, they get deselected
+        //
+        // It actually does not clear the selection, because that is done at the mouse
+        // down of the selection (when no ctrl is pressed)
+
+        for (Token token : tokensInSelectionBox) {
+            if (highlightedTokens.contains(token) && e.isControlDown())
+                highlightedTokens.remove(token);
+            else
+                highlightedTokens.add(token);
+        }
+
+        isSelectionBoxActive = false;
+        notifyChange();
     }
 
     @Override
@@ -334,8 +396,7 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
         if (!tokens.remove(t))
             return;
 
-        if (t.equals(draggedToken))
-            draggedToken = null;
+        removeTokenFromDrag(t);
         highlightedTokens.remove(t);
 
         notifyChange();
@@ -369,5 +430,28 @@ public class TokenRendererComponent extends MouseAdapter implements RenderingCom
 
     private int clamp(int value, int min, int max) {
         return value > max ? max : value < min ? min : value;
+    }
+
+    @Override
+    public List<Token> getAllHighlightedTokens() {
+        return new ArrayList<Token>(highlightedTokens);
+    }
+
+    @Override
+    public void removeAllHighlightedTokens() {
+        var toRemove = new ArrayList<>(highlightedTokens);
+        toRemove.forEach(token -> removeToken(token));
+    }
+
+    public boolean isDragged(Token token) {
+        for (TokenDragElement tokenDragElement : draggedTokens) {
+            if (tokenDragElement.token().equals(token))
+                return true;
+        }
+        return false;
+    }
+
+    public boolean removeTokenFromDrag(Token t) {
+        return draggedTokens.removeIf(dragElement -> dragElement.token().equals(t));
     }
 }

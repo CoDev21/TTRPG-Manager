@@ -21,7 +21,7 @@ import de.omegasystems.dataobjects.MenubarAttributeHolder;
 import de.omegasystems.renderer.MainRenderer;
 import de.omegasystems.renderer.MenubarComponent;
 import de.omegasystems.renderer.components.DebugOverlayComponent;
-import de.omegasystems.renderer.components.DragImageInputHandlingComponent;
+import de.omegasystems.renderer.components.DragDropHandlingComponent;
 import de.omegasystems.renderer.components.GridComponent;
 import de.omegasystems.renderer.components.ImageComponent;
 import de.omegasystems.renderer.components.MeasuringToolsComponent;
@@ -102,11 +102,9 @@ public class App {
         renderer.addWorldRenderComponent(new TokenTooltipComponent(tokenHandler));
         renderer.addWorldRenderComponent(new MeasuringToolsComponent());
 
-        renderer.addUIRenderComponent(new DragImageInputHandlingComponent());
+        renderer.addUIRenderComponent(new DragDropHandlingComponent());
         renderer.addUIRenderComponent(new FullscreenComponent());
-
-        if (isDevEnv())
-            renderer.addUIRenderComponent(new DebugOverlayComponent());
+        renderer.addUIRenderComponent(new DebugOverlayComponent());
 
     }
 
