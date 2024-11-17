@@ -109,8 +109,9 @@ public class DragDropHandlingComponent implements RenderingComponent {
         renderer.addMouseMotionListener(new MouseAdapter() {
             @Override
             public void mouseDragged(MouseEvent e) {
-                Point mouseLocation = SwingUtilities.convertPoint(e.getComponent(), e.getPoint(), renderer.getFrame().getContentPane());
-    
+                Point mouseLocation = SwingUtilities.convertPoint(e.getComponent(), e.getPoint(),
+                        renderer.getFrame().getContentPane());
+
                 // Use the content pane's bounds for the bounds check
                 Rectangle contentBounds = renderer.getFrame().getContentPane().getBounds();
                 if (contentBounds.contains(mouseLocation))

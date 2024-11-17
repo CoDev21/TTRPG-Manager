@@ -130,6 +130,11 @@ public class TranslationHandler implements WorldTranslationHandler {
         animationTimer.start();
     }
 
+    @Override
+    public void checkBounds() {
+        this.scale = clampScale(getScale());
+    }
+
     public void update() {
         if (enableAnimations) {
             // Interpolate scale and offsets

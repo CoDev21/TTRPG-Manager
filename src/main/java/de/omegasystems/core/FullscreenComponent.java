@@ -11,6 +11,7 @@ import javax.swing.AbstractAction;
 import javax.swing.JComponent;
 import javax.swing.JMenuBar;
 import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 
 public class FullscreenComponent implements RenderingComponent {
 
@@ -50,12 +51,23 @@ public class FullscreenComponent implements RenderingComponent {
             // Leave fullscreen
             frame.setJMenuBar(jMenuBar);
             device.setFullScreenWindow(null);
+
         } else {
             // Enter fullscreen
             jMenuBar = frame.getJMenuBar();
             frame.setJMenuBar(null);
             device.setFullScreenWindow(frame);
         }
+
+        new Thread(() -> {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            SwingUtilities.invokeLater(() -> renderer.getTranslationhandler().checkBounds());
+        }).start();
+
     }
 
 }

@@ -11,4 +11,6 @@ public interface WorldTranslationHandler {
 
     public Point getWorldCoordinateFormUISpace(Point uiPoint);
 
+    public void checkBounds();
+
 }
