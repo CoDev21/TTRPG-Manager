@@ -4,6 +4,7 @@ import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
@@ -12,18 +13,15 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
-import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSlider;
 import javax.swing.JTextArea;
@@ -40,7 +38,10 @@ import de.omegasystems.utility.AbstractAttributeHolder.Property;
 
 public abstract class ComponentBuilder {
 
-    public static <T extends Enum<?>> JPanel createEnumSlider(String toTitle,
+    public static record SliderComponents(JLabel label, JSlider slider) {
+    }
+
+    public static <T extends Enum<?>> SliderComponents createEnumSlider(String toTitle,
             AbstractAttributeHolder.Property<T> coupledValue,
             Class<T> values) {
 
@@ -54,7 +55,7 @@ public abstract class ComponentBuilder {
         slider.setMajorTickSpacing(1);
         slider.setMinorTickSpacing(1);
 
-        JLabel label = new JLabel(title + enumValues[0].toString());
+        JLabel label = new JLabel(title + enumValues[0].toString(), JLabel.LEFT);
 
         if (coupledValue != null) {
 
@@ -87,17 +88,7 @@ public abstract class ComponentBuilder {
 
         }
 
-        // Create a neat layout to accomodate the enum slider
-
-        var panel = new JPanel();
-        // slider.setAlignmentX(Component.LEFT_ALIGNMENT);
-        // descriptionLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        // panel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.add(label);
-        panel.add(slider);
-        return panel;
+        return new SliderComponents(label, slider);
 
     }
 
@@ -215,6 +206,13 @@ public abstract class ComponentBuilder {
                 } catch (ParseException eg) {
                 }
             }
+
+        });
+
+        item.addFocusListener(new FocusAdapter() {
+            public void focusLost(java.awt.event.FocusEvent e) {
+                item.setText(String.format("%,." + decimals + "f", coupledValue.getValue()));
+            };
         });
 
         // Hook up an observer to change the ui if an internal change occurs
@@ -325,6 +323,13 @@ public abstract class ComponentBuilder {
             revalidate();
             if (getParent() != null)
                 getParent().revalidate();
+        }
+
+        @Override
+        public Dimension getMaximumSize() {
+            if (size != null)
+                return size;
+            return super.getMaximumSize();
         }
 
         private static Image loadFileOrPlaceholderImage(File filePath, Image backupImage) {

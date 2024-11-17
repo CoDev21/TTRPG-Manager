@@ -12,9 +12,12 @@ import java.awt.Label;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 
 import de.omegasystems.core.Token;
 import de.omegasystems.core.TokenHandler;
@@ -49,36 +52,75 @@ public class TokenDialog extends JDialog {
         super(parent);
         setTitle(token == null ? "Create New Token" : "Edit " + data.getName().getValue() + "");
 
-        var mainPanel = new JPanel();
-        var mainLayout = new GridLayout(2, 1);
-        mainLayout.setHgap(5);
-        mainLayout.setVgap(5);
-        mainPanel.setLayout(mainLayout);
-
-        var topPanel = new JPanel();
-        var topLayout = new GridLayout(1, 2);
-        topLayout.setVgap(20);
-        topPanel.setLayout(topLayout);
-
-        var topRightPanel = new JPanel();
-        topRightPanel.setLayout(new BoxLayout(topRightPanel, BoxLayout.Y_AXIS));
-
+        // Top left panel
         var topLeftPanel = new JPanel();
         topLeftPanel.setLayout(new BoxLayout(topLeftPanel, BoxLayout.Y_AXIS));
-
-        var descriptionEditor = ComponentBuilder.createEditorPane(data.getDescription());
 
         var imageChooser = ComponentBuilder.createImagePathSelector(parent, data.getPictureFile(),
                 Token.getPlaceholderImage());
         imageChooser.setImageSize(
                 new Dimension(Token.getPlaceholderImage().getWidth(null), Token.getPlaceholderImage().getWidth(null)));
         var nameChooser = ComponentBuilder.createTextField(16, data.getName());
-        // nameChooser.setPreferredSize(imageChooser.getMinimumSize());
+        nameChooser.setMaximumSize(
+                new Dimension(imageChooser.getMinimumSize().width, nameChooser.getPreferredSize().height));
 
-        var friendlienessChooser = ComponentBuilder.createEnumRadioButtons(data.getFriendStatus(), Friendlieness.class);
+        imageChooser.setAlignmentX(CENTER_ALIGNMENT);
+
+        topLeftPanel.add(imageChooser);
+        topLeftPanel.add(Box.createVerticalStrut(10));
+        topLeftPanel.add(Box.createVerticalGlue());
+        topLeftPanel.add(nameChooser);
+
+        // Top right panel
+        var topRightPanel = new JPanel();
+        topRightPanel.setLayout(new BoxLayout(topRightPanel, BoxLayout.Y_AXIS));
+        topRightPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        topRightPanel.setFocusable(true);
+
+        // The size chooser panel
+        JPanel sizePanel = new JPanel(new BorderLayout());
         var sizeClassChooser = ComponentBuilder.createEnumSlider("Size: ", data.getSizeClass(), TokenSize.class);
-        var manualSizeChooser = ComponentBuilder.createDoubleTextField(5, data.getSize(), 1);
+        var manualSizeChooser = ComponentBuilder.createDoubleTextField(3, data.getSize(), 1);
+        manualSizeChooser.setMaximumSize(manualSizeChooser.getPreferredSize());
+        sizePanel.add(sizeClassChooser.slider(), BorderLayout.CENTER);
+        sizePanel.add(manualSizeChooser, BorderLayout.EAST);
+        
+
+        var friendlienessLabel = new JLabel("Friendlieness:");
+        var friendlienessChooser = ComponentBuilder.createEnumRadioButtons(data.getFriendStatus(), Friendlieness.class);
         var movementEditor = ComponentBuilder.createTextField(12, data.getMovement());
+
+        // Prevent the textfield and panel from using up all the vertical space
+        movementEditor.setMaximumSize(new Dimension(Integer.MAX_VALUE, movementEditor.getPreferredSize().height));
+        sizePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, sizePanel.getPreferredSize().height));
+
+        friendlienessLabel
+                .setMaximumSize(new Dimension(Integer.MAX_VALUE, friendlienessLabel.getPreferredSize().height));
+
+        friendlienessChooser.forEach(elem -> elem.setAlignmentX(LEFT_ALIGNMENT));
+
+        // Add all components
+        topRightPanel.add(leftAlignedInHorizontalBox(sizeClassChooser.label()));
+        topRightPanel.add(sizePanel);
+        topRightPanel.add(Box.createGlue());
+        topRightPanel.add(leftAlignedInHorizontalBox(friendlienessLabel));
+        friendlienessChooser.forEach(btn -> topRightPanel.add(leftAlignedInHorizontalBox(btn)));
+        topRightPanel.add(Box.createGlue());
+        topRightPanel.add(movementEditor);
+
+        // Other panels
+        var mainPanel = new JPanel();
+        var mainLayout = new GridLayout(2, 1);
+        mainLayout.setHgap(8);
+        mainLayout.setVgap(8);
+        mainPanel.setLayout(mainLayout);
+
+        var topPanel = new JPanel();
+        var topLayout = new GridLayout(1, 2);
+        topLayout.setHgap(30);
+        topPanel.setLayout(topLayout);
+
+        var descriptionEditor = ComponentBuilder.createEditorPane(data.getDescription());
 
         var sendButton = ComponentBuilder.createCallbackButton(token != null ? "Save Changes" : "Create Token", () -> {
             if (token != null)
@@ -92,34 +134,11 @@ public class TokenDialog extends JDialog {
         sendButton.setForeground(Color.RED);
         sendButton.setOpaque(false);
 
-        topLeftPanel.add(imageChooser);
-        topLeftPanel.add(Box.createVerticalStrut(10));
-        topLeftPanel.add(nameChooser);
-
-        topRightPanel.add(sizeClassChooser);
-        topRightPanel.add(manualSizeChooser);
-        topRightPanel.add(new Label("Friendlieness:", Label.LEFT));
-        friendlienessChooser.forEach(btn -> topRightPanel.add(btn));
-        topRightPanel.add(Box.createVerticalStrut(20));
-        topRightPanel.add(movementEditor);
-
         topPanel.add(topLeftPanel);
         topPanel.add(topRightPanel);
 
-        // bottomPanel.add(descriptionEditor, JLayeredPane.DEFAULT_LAYER);
-        // bottomPanel.add(sendButton, JLayeredPane.PALETTE_LAYER);
-
         mainPanel.add(topPanel);
         mainPanel.add(descriptionEditor);
-
-        // JPanel buttonPanel = new JPanel();
-        // buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
-        // buttonPanel.add(sendButton);
-
-        // JLayeredPane layers = new JLayeredPane();
-
-        // layers.add(mainPanel, JLayeredPane.DEFAULT_LAYER);
-        // layers.add(buttonPanel, JLayeredPane.MODAL_LAYER);
 
         add(mainPanel);
         add(sendButton, BorderLayout.SOUTH);
@@ -129,14 +148,7 @@ public class TokenDialog extends JDialog {
                 BorderFactory.createEmptyBorder(eb, eb, eb, eb), // outer border
                 BorderFactory.createEmptyBorder()));
 
-        // JPanel south = new JPanel();
-        // south.add(send);
-        // getContentPane().add(north, "North");
-        // getContentPane().add(south, "South");
-        // pack();
-
         changeFont(this, new Font("Georgia", Font.BOLD, sendButton.getFont().getSize()));
-
         pack();
         setResizable(false);
         setVisible(true);
@@ -150,6 +162,13 @@ public class TokenDialog extends JDialog {
                 changeFont(child, font);
             }
         }
+    }
+
+    private static Box leftAlignedInHorizontalBox(Component component) {
+        Box box = Box.createHorizontalBox();
+        box.add(component);
+        box.add(Box.createHorizontalGlue());
+        return box;
     }
 
 }
